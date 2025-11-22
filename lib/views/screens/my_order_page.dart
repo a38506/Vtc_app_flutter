@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'order_detail_page.dart';
 import '../../core/services/order_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/models/order_model.dart'; // import model Order
 
 class MyOrdersPage extends StatefulWidget {
   const MyOrdersPage({super.key});
@@ -11,7 +12,7 @@ class MyOrdersPage extends StatefulWidget {
 }
 
 class _MyOrdersPageState extends State<MyOrdersPage> {
-  List<dynamic> orders = [];
+  List<Order> orders = [];
   bool isLoading = true;
 
   // Map trạng thái BE sang tiếng Việt
@@ -33,13 +34,35 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
   Future<void> _loadOrders() async {
     try {
       final token = await AuthService.getToken();
-      final fetchedOrders = await OrderService.getMyOrders(token!);
+
+      // Lấy JSON từ API
+      final fetchedOrdersJson = await OrderService.getMyOrders();
+
+      // In ra JSON gốc
+      print('Fetched orders JSON: $fetchedOrdersJson');
+
+      // Parse từng order an toàn
+      final List<Order> fetchedOrders = [];
+      for (var json in fetchedOrdersJson) {
+        try {
+          final order = Order.fromJson(json as Map<String, dynamic>);
+          print(
+              'Parsed order: ${order.orderNumber}, totalAmount: ${order.totalAmount}');
+          fetchedOrders.add(order);
+        } catch (e, stackTrace) {
+          print('Failed to parse order: $json');
+          print('Error: $e');
+          print(stackTrace);
+        }
+      }
+
       setState(() {
         orders = fetchedOrders;
         isLoading = false;
       });
-    } catch (error) {
+    } catch (error, stackTrace) {
       print('Failed to load orders: $error');
+      print(stackTrace);
       setState(() {
         isLoading = false;
       });
@@ -115,15 +138,12 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                               order: order,
                               orderStatusMap: orderStatusMap,
                               onTap: () {
-                                final orderId = order['id'] ?? '';
-                                if (orderId.isNotEmpty) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          OrderDetailPage(orderId: orderId),
-                                    ),
-                                  );
-                                }
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        OrderDetailPage(orderId: order.id),
+                                  ),
+                                );
                               },
                             );
                           },
@@ -163,7 +183,7 @@ class FilterButton extends StatelessWidget {
 }
 
 class OrderCard extends StatelessWidget {
-  final dynamic order;
+  final Order order;
   final VoidCallback onTap;
   final Map<String, String> orderStatusMap;
 
@@ -195,8 +215,9 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = order['order_status'] ?? '';
-    final totalAmount = order['total_amount'] ?? 0;
+    final status = order.orderStatus;
+    final totalAmount = order.totalAmount;
+    final orderDate = order.orderDate;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -208,7 +229,7 @@ class OrderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Đơn hàng ${order['order_number'] ?? 'N/A'}',
+              'Đơn hàng ${order.orderNumber}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -216,9 +237,7 @@ class OrderCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              order['order_date'] != null
-                  ? '${DateTime.parse(order['order_date']).toLocal()}'
-                  : '',
+              orderDate != null ? '${orderDate.toLocal()}' : '',
               style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 8),

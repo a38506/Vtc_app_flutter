@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/services/order_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/models/order_model.dart'; // import model Order, OrderItem, Payment
 
 class OrderDetailPage extends StatefulWidget {
-  final String orderId;
+  final int orderId;
 
   const OrderDetailPage({Key? key, required this.orderId}) : super(key: key);
 
@@ -12,7 +13,7 @@ class OrderDetailPage extends StatefulWidget {
 }
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
-  Map<String, dynamic>? orderDetail;
+  Order? orderDetail;
   bool isLoading = true;
   bool showAllItems = false;
 
@@ -40,23 +41,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Future<void> _loadOrderDetail() async {
     try {
-      final token = await AuthService.getToken();
-      final detail = await OrderService.getOrderDetail(widget.orderId, token!);
+      await AuthService.getToken(); // token nếu cần
+      final detail = await OrderService.getOrderDetail(widget.orderId);
       setState(() {
         orderDetail = detail;
         isLoading = false;
       });
-    } catch (error) {
-      print('Failed to load order detail: $error');
+    } catch (e) {
+      print('Failed to load order detail: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
 
-  String formatDate(String? isoDate) {
-    if (isoDate == null || isoDate.isEmpty) return '';
-    final dt = DateTime.tryParse(isoDate)?.toLocal();
+  String formatDate(DateTime? dt) {
     if (dt == null) return '';
     return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute}';
   }
@@ -118,9 +117,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       );
     }
 
-    final items = (orderDetail!['items'] as List<dynamic>? ?? []);
-    final displayItems =
-        showAllItems ? items : items.take(2).toList(); // chỉ 2 item nếu chưa mở rộng
+    final items = orderDetail!.items;
+    final displayItems = showAllItems ? items : items.take(2).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -136,21 +134,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           children: [
             // Mã đơn & trạng thái
             Text(
-              'Mã đơn hàng: ${orderDetail!['order_number'] ?? ''}',
+              'Mã đơn hàng: ${orderDetail!.orderNumber}',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            Text('Ngày đặt: ${formatDate(orderDetail!['order_date'])}'),
+            Text('Ngày đặt: ${formatDate(orderDetail!.orderDate)}'),
             Text(
-              'Trạng thái: ${orderStatusMap[orderDetail!['order_status']] ?? 'Không rõ'}',
+              'Trạng thái: ${orderStatusMap[orderDetail!.orderStatus] ?? 'Không rõ'}',
               style: TextStyle(
-                  color: getStatusColor(orderDetail!['order_status']),
+                  color: getStatusColor(orderDetail!.orderStatus),
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
             // Thông tin giao hàng
-            if ((orderDetail!['recipient_name'] ?? '').isNotEmpty ||
-                (orderDetail!['shipping_address'] ?? '').toString().isNotEmpty)
+            if ((orderDetail!.recipientName?.isNotEmpty ?? false) ||
+                (orderDetail!.shippingAddress?.isNotEmpty ?? false))
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -158,24 +156,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
-                  if ((orderDetail!['recipient_name'] ?? '').isNotEmpty)
-                    _buildInfoRow('Người nhận', orderDetail!['recipient_name']),
-                  if ((orderDetail!['recipient_phone'] ?? '').isNotEmpty)
-                    _buildInfoRow('SĐT', orderDetail!['recipient_phone']),
-                  if ((orderDetail!['shipping_address'] ?? '').isNotEmpty)
-                    _buildInfoRow('Địa chỉ', orderDetail!['shipping_address']),
-                  if ((orderDetail!['shipping_province'] ?? '').isNotEmpty)
-                    _buildInfoRow('Tỉnh/TP', orderDetail!['shipping_province']),
-                  if ((orderDetail!['shipping_district'] ?? '').isNotEmpty)
-                    _buildInfoRow('Quận/Huyện', orderDetail!['shipping_district']),
-                  if ((orderDetail!['shipping_ward'] ?? '').isNotEmpty)
-                    _buildInfoRow('Phường/Xã', orderDetail!['shipping_ward']),
+                  if (orderDetail!.recipientName != null)
+                    _buildInfoRow('Người nhận', orderDetail!.recipientName!),
+                  if (orderDetail!.recipientPhone != null)
+                    _buildInfoRow('SĐT', orderDetail!.recipientPhone!),
+                  if (orderDetail!.shippingAddress != null)
+                    _buildInfoRow('Địa chỉ', orderDetail!.shippingAddress!),
+                  if (orderDetail!.shippingProvince != null)
+                    _buildInfoRow('Tỉnh/TP', orderDetail!.shippingProvince!),
+                  if (orderDetail!.shippingDistrict != null)
+                    _buildInfoRow('Quận/Huyện', orderDetail!.shippingDistrict!),
+                  if (orderDetail!.shippingWard != null)
+                    _buildInfoRow('Phường/Xã', orderDetail!.shippingWard!),
                   const SizedBox(height: 16),
                 ],
               ),
 
             // Thanh toán
-            if ((orderDetail!['payment_method'] ?? '').isNotEmpty)
+            if (orderDetail!.paymentMethod != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -183,47 +181,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Phương thức', orderDetail!['payment_method']),
-                  if ((orderDetail!['payment_status'] ?? '').isNotEmpty)
+                  _buildInfoRow('Phương thức', orderDetail!.paymentMethod!),
+                  if (orderDetail!.paymentStatus != null)
                     _buildInfoRow(
                         'Trạng thái',
-                        paymentStatusMap[orderDetail!['payment_status']] ??
-                            orderDetail!['payment_status'],
-                        valueColor: (orderDetail!['payment_status'] ?? '') ==
-                                'pending'
-                            ? Colors.red
-                            : Colors.green),
-                  const SizedBox(height: 16),
-                ],
-              ),
-
-            // Vận chuyển
-            if (orderDetail!['shipment'] != null &&
-                (orderDetail!['shipment'] as Map).isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Vận chuyển',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                      'Tracking',
-                      orderDetail!['shipment']?['tracking_number'] ?? 'N/A'),
-                  _buildInfoRow('Carrier',
-                      orderDetail!['shipment']?['carrier_code'] ?? 'N/A'),
-                  if (orderDetail!['shipment']?['shipping_cost'] != null)
-                    _buildInfoRow(
-                        'Phí vận chuyển',
-                        double.tryParse(orderDetail!['shipment']?['shipping_cost']
-                                    ?.toString() ??
-                                '0')!
-                            .toStringAsFixed(0) +
-                            ' ₫'),
-                  if (orderDetail!['shipment']?['estimated_delivery_date'] != null)
-                    _buildInfoRow(
-                        'Ngày dự kiến',
-                        formatDate(orderDetail!['shipment']?['estimated_delivery_date'])),
+                        paymentStatusMap[orderDetail!.paymentStatus!] ??
+                            orderDetail!.paymentStatus!,
+                        valueColor:
+                            orderDetail!.paymentStatus == 'pending'
+                                ? Colors.red
+                                : Colors.green),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -236,7 +203,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 Text(
-                  '${double.tryParse(orderDetail!['total_amount']?.toString() ?? '0')!.toStringAsFixed(0)} ₫',
+                  orderDetail!.totalAmount.toStringAsFixed(0) + ' ₫',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -256,18 +223,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   ...displayItems.map((item) {
-                    final quantity = item['quantity'] ?? 0;
-                    final unitPrice =
-                        double.tryParse(item['unit_price'].toString()) ?? 0;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          if (item['image'] != null &&
-                              item['image'].toString().isNotEmpty)
-                            Image.network(item['image'],
-                                width: 50, height: 50, fit: BoxFit.cover)
-                          else
+                          
+                          
                             Container(
                               width: 50,
                               height: 50,
@@ -280,12 +241,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item['product_name'] ?? ''),
-                              Text('Số lượng: $quantity',
+                              Text(item.productName),
+                              Text('Số lượng: ${item.quantity}',
                                   style: const TextStyle(color: Colors.grey)),
                             ],
                           )),
-                          Text('${unitPrice.toStringAsFixed(0)} ₫',
+                          Text('${item.unitPrice.toStringAsFixed(0)} ₫',
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold)),
                         ],
@@ -311,10 +272,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
 
             // Ghi chú
-            if (orderDetail!['notes'] != null &&
-                orderDetail!['notes'].toString().isNotEmpty)
+            if (orderDetail!.notes != null && orderDetail!.notes!.isNotEmpty)
               Text(
-                'Ghi chú: ${orderDetail!['notes']}',
+                'Ghi chú: ${orderDetail!.notes}',
                 style: const TextStyle(color: Colors.grey),
               ),
           ],

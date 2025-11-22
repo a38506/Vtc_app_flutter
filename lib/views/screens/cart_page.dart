@@ -1,11 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:marketky/core/models/cart_model.dart';
-import 'package:marketky/core/models/order_model.dart';
 import 'package:marketky/core/models/address_model.dart';
 import 'package:marketky/core/services/cart_service.dart';
 import 'package:marketky/core/services/order_service.dart';
 import 'package:marketky/core/services/address_service.dart';
-import 'package:marketky/views/screens/my_order_page.dart';
+import 'package:marketky/views/screens/order_success_page.dart';
 import '../widgets/cart_tile.dart';
 import '../screens/address_page.dart';
 import 'package:marketky/constants/app_color.dart';
@@ -25,6 +26,7 @@ class _CartPageState extends State<CartPage> {
   double _shippingFee = 0.0;
   double _discount = 0.0;
   String _paymentMethod = 'COD';
+  bool _isLoading = false;
 
   Address? selectedAddress;
   final TextEditingController _addressController = TextEditingController();
@@ -154,6 +156,62 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
+ Future<void> _checkout() async {
+  if (selectedAddress == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Vui lòng chọn địa chỉ giao hàng')),
+    );
+    return;
+  }
+
+  setState(() => _isLoading = true);
+
+  try {
+    // Chuẩn bị items
+    final items = cartItems.map((item) => {
+      "product_id": item.product.id,
+      "variant_id": item.variant.id,
+      "quantity": item.quantity,
+    }).toList();
+
+    // Chuẩn bị shippingOption (ví dụ lấy từ API tính phí)
+    final shippingOption = {
+      "fee": _shippingFee.toInt(),
+      "service_id": 53321, // ví dụ
+      "service_type_id": 2, // ví dụ
+    };
+
+    // Body gửi lên API
+    final body = {
+      "addressId": selectedAddress!.id,
+      "shippingOption": shippingOption,
+      "paymentMethod": _paymentMethod.toLowerCase(),
+      "notes": _noteController.text,
+      "items": items,
+    };
+
+    print('📦 CREATE ORDER BODY: ${jsonEncode(body)}');
+
+    // Gọi API
+    final createdOrder = await OrderService.createOrder(body);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderSuccessPage(order: createdOrder),
+      ),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Thanh toán thất bại: $e')),
+    );
+  } finally {
+    setState(() => _isLoading = false);
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final subtotal = _productsTotal + _shippingFee - _discount;
@@ -172,7 +230,8 @@ class _CartPageState extends State<CartPage> {
           children: [
             // Địa chỉ giao hàng
             Text('Địa chỉ giao hàng:',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () async {
@@ -225,7 +284,8 @@ class _CartPageState extends State<CartPage> {
 
             // Sản phẩm
             Text('Sản phẩm trong giỏ hàng:',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             ListView.builder(
               shrinkWrap: true,
@@ -285,7 +345,8 @@ class _CartPageState extends State<CartPage> {
 
             // Phương thức thanh toán
             Text('Phương thức thanh toán:',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -377,12 +438,7 @@ class _CartPageState extends State<CartPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MyOrdersPage()),
-                  );
-                },
+                onPressed: _isLoading ? null : _checkout,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -390,13 +446,16 @@ class _CartPageState extends State<CartPage> {
                     borderRadius: BorderRadius.circular(50),
                   ),
                 ),
-                child: Text(
-                  'Thanh toán ${subtotal.toStringAsFixed(0)} ₫',
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Thanh toán ${subtotal.toStringAsFixed(0)} ₫',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.white),
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
               ),
             ),
           ],
