@@ -13,7 +13,7 @@ class SearchService {
   static Future<List<String>> getSearchHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final history = prefs.getStringList(_historyKey) ?? [];
-    return history.reversed.toList(); // mới nhất lên đầu
+    return history.reversed.toList(); 
   }
 
   static Future<void> addSearchHistory(String keyword) async {
@@ -30,7 +30,7 @@ class SearchService {
     await prefs.remove(_historyKey);
   }
 
-  /// -------------------- Tìm kiếm sản phẩm theo API --------------------
+  /// ------------------- Tìm kiếm sản phẩm theo API -------------------
   static Future<List<Product>> searchProducts({
     String? search,
     int? categoryId,
