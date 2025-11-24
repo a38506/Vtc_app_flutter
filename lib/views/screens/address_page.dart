@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marketky/constants/app_color.dart';
@@ -75,8 +74,8 @@ class _AddressPageState extends State<AddressPage> {
       });
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Không thể tải danh sách địa chỉ.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể tải danh sách địa chỉ.')));
     }
   }
 
@@ -294,8 +293,8 @@ class _AddressPageState extends State<AddressPage> {
     final prefs = await SharedPreferences.getInstance();
     final customerId = prefs.getInt('customerId');
     if (customerId == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Không tìm thấy thông tin KH.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không tìm thấy thông tin KH.')));
       return;
     }
 
@@ -336,13 +335,26 @@ class _AddressPageState extends State<AddressPage> {
     }
   }
 
+  Color _lighterPrimary(double amount) {
+    // Nhạt màu primary theo % amount (0.0 - 1.0)
+    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Địa chỉ của tôi', style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColor.primary,
-        centerTitle: true,
+        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
+        elevation: 1,
+        centerTitle: false,
+        title: const Text(
+          'Địa chỉ của tôi',
+          style: TextStyle(
+            color: AppColor.primarySoft,
+            fontSize: 19,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColor.primarySoft),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -361,12 +373,13 @@ class _AddressPageState extends State<AddressPage> {
                           borderRadius: BorderRadius.circular(12)),
                       elevation: 3,
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.location_on, color: AppColor.primary, size: 28),
+                            Icon(Icons.location_on,
+                                color: AppColor.primary, size: 28),
                             SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -397,7 +410,8 @@ class _AddressPageState extends State<AddressPage> {
                                   ),
                                   SizedBox(height: 4),
                                   Text('${a.phone}',
-                                      style: TextStyle(color: Colors.grey[700])),
+                                      style:
+                                          TextStyle(color: Colors.grey[700])),
                                   SizedBox(height: 4),
                                   Text(
                                     '${a.address}, ${a.wardName ?? ''}, ${a.districtName ?? ''}, ${a.provinceName ?? ''}',
@@ -429,9 +443,9 @@ class _AddressPageState extends State<AddressPage> {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColor.primary,
+        backgroundColor: const Color.fromARGB(255, 74, 74, 146),
         onPressed: () => _showAddressForm(),
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_color.dart';
 import 'order_detail_page.dart';
 import '../../core/services/order_service.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/models/order_model.dart'; // import model Order
+import '../../core/models/order_model.dart';
+import 'package:intl/intl.dart';
 
 class MyOrdersPage extends StatefulWidget {
-  const MyOrdersPage({super.key});
+  final String? orderId;
+
+  const MyOrdersPage({Key? key, this.orderId}) : super(key: key);
 
   @override
   _MyOrdersPageState createState() => _MyOrdersPageState();
@@ -13,16 +17,17 @@ class MyOrdersPage extends StatefulWidget {
 
 class _MyOrdersPageState extends State<MyOrdersPage> {
   List<Order> orders = [];
+  List<Order> filteredOrders = [];
   bool isLoading = true;
 
-  // Map trạng thái BE sang tiếng Việt
-  final Map<String, String> orderStatusMap = {
-    'pending': 'Đang xử lý',
-    'confirmed': 'Xác nhận',
-    'shipping': 'Vận chuyển',
-    'delivered': 'Đã nhận',
-    'cancel': 'Đã hủy',
-    'closed': 'Đóng hàng',
+  String selectedFilter = "Tất cả";
+
+  final Map<String, Map<String, dynamic>> orderStatus = {
+    'pending': {'text': 'Chờ xử lý', 'color': AppColor.accent},
+    'processing': {'text': 'Đang xử lý', 'color': Colors.orange},
+    'shipped': {'text': 'Vận chuyển', 'color': AppColor.primary},
+    'completed': {'text': 'Đã nhận', 'color': Colors.green},
+    'cancelled': {'text': 'Đã hủy', 'color': Colors.grey},
   };
 
   @override
@@ -31,153 +36,163 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
     _loadOrders();
   }
 
+  void applyFilter(String filter) {
+    setState(() {
+      selectedFilter = filter;
+
+      if (filter == "Tất cả") {
+        filteredOrders = List.from(orders);
+      } else {
+        String key = orderStatus.entries
+            .firstWhere((e) => e.value['text'] == filter)
+            .key;
+
+        filteredOrders = orders.where((o) => o.orderStatus == key).toList();
+      }
+    });
+  }
+
   Future<void> _loadOrders() async {
     try {
-      final token = await AuthService.getToken();
-
-      // Lấy JSON từ API
+      await AuthService.getToken();
       final fetchedOrdersJson = await OrderService.getMyOrders();
 
-      // In ra JSON gốc
-      print('Fetched orders JSON: $fetchedOrdersJson');
-
-      // Parse từng order an toàn
-      final List<Order> fetchedOrders = [];
+      List<Order> fetchedOrders = [];
       for (var json in fetchedOrdersJson) {
         try {
-          final order = Order.fromJson(json as Map<String, dynamic>);
-          print(
-              'Parsed order: ${order.orderNumber}, totalAmount: ${order.totalAmount}');
-          fetchedOrders.add(order);
-        } catch (e, stackTrace) {
-          print('Failed to parse order: $json');
-          print('Error: $e');
-          print(stackTrace);
+          fetchedOrders.add(Order.fromJson(json));
+        } catch (e) {
+          print("Parse error: $e");
         }
       }
 
       setState(() {
         orders = fetchedOrders;
+        filteredOrders = List.from(fetchedOrders);
         isLoading = false;
       });
-    } catch (error, stackTrace) {
-      print('Failed to load orders: $error');
-      print(stackTrace);
-      setState(() {
-        isLoading = false;
-      });
+    } catch (e) {
+      print("Load error: $e");
+      setState(() => isLoading = false);
     }
   }
 
-  Color getStatusColor(String? status) {
-    switch (status) {
-      case 'pending':
-        return Colors.red;
-      case 'confirmed':
-        return Colors.orange;
-      case 'shipping':
-        return Colors.blue;
-      case 'delivered':
-        return Colors.green;
-      case 'cancel':
-        return Colors.grey;
-      case 'closed':
-        return Colors.black;
-      default:
-        return Colors.black;
-    }
+  Color _lighterPrimary(double amount) {
+    // Nhạt màu primary theo % amount (0.0 - 1.0)
+    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đơn hàng của tôi'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
+        elevation: 1,
+        centerTitle: false,
+        title: const Text(
+          'Đơn hàng của tôi',
+          style: TextStyle(
+            color: AppColor.primarySoft,
+            fontSize: 19,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColor.primarySoft),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : orders.isEmpty
-              ? const Center(child: Text('Không có đơn hàng nào.'))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Bộ lọc trạng thái đơn hàng
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: const [
-                            FilterButton(title: 'Tất cả'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Đang xử lý'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Xác nhận'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Đóng hàng'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Vận chuyển'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Đã nhận'),
-                            SizedBox(width: 8),
-                            FilterButton(title: 'Đã hủy'),
-                          ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ---------------- luôn hiện FILTER ----------------
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  FilterButton(
+                    title: 'Tất cả',
+                    isSelected: selectedFilter == "Tất cả",
+                    onTap: () => applyFilter("Tất cả"),
+                  ),
+                  const SizedBox(width: 8),
+                  ...orderStatus.entries.map((e) {
+                    return Row(
+                      children: [
+                        FilterButton(
+                          title: e.value['text'],
+                          isSelected: selectedFilter == e.value['text'],
+                          onTap: () => applyFilter(e.value['text']),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Danh sách đơn hàng
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: orders.length,
+                        const SizedBox(width: 8),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ---------------- LIST OR EMPTY ----------------
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredOrders.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Không có đơn hàng nào ở trạng thái này.',
+                            style: TextStyle(color: Colors.grey, fontSize: 15),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredOrders.length,
                           itemBuilder: (context, index) {
-                            final order = orders[index];
                             return OrderCard(
-                              order: order,
-                              orderStatusMap: orderStatusMap,
+                              order: filteredOrders[index],
+                              orderStatus: orderStatus,
                               onTap: () {
-                                Navigator.of(context).push(
+                                Navigator.push(
+                                  context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        OrderDetailPage(orderId: order.id),
+                                    builder: (_) => OrderDetailPage(
+                                        orderId: filteredOrders[index].id),
                                   ),
                                 );
                               },
                             );
                           },
                         ),
-                      ),
-                    ],
-                  ),
-                ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class FilterButton extends StatelessWidget {
   final String title;
+  final VoidCallback onTap;
+  final bool isSelected;
 
-  const FilterButton({super.key, required this.title});
+  const FilterButton({
+    super.key,
+    required this.title,
+    required this.onTap,
+    required this.isSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        // TODO: Thêm logic lọc trạng thái đơn hàng tại đây
-      },
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 12),
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isSelected ? const Color.fromARGB(255, 74, 74, 146) : Colors.white,
+        foregroundColor: isSelected ? Colors.white : AppColor.secondary,
+        side:
+            BorderSide(color: isSelected ? const Color.fromARGB(255, 74, 74, 146) : AppColor.border),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        side: const BorderSide(color: Colors.grey),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
+      child: Text(title, style: const TextStyle(fontSize: 13)),
     );
   }
 }
@@ -185,92 +200,71 @@ class FilterButton extends StatelessWidget {
 class OrderCard extends StatelessWidget {
   final Order order;
   final VoidCallback onTap;
-  final Map<String, String> orderStatusMap;
+  final Map<String, Map<String, dynamic>> orderStatus;
 
   const OrderCard({
     super.key,
     required this.order,
     required this.onTap,
-    required this.orderStatusMap,
+    required this.orderStatus,
   });
-
-  Color getStatusColor(String? status) {
-    switch (status) {
-      case 'pending':
-        return Colors.red;
-      case 'confirmed':
-        return Colors.orange;
-      case 'shipping':
-        return Colors.blue;
-      case 'delivered':
-        return Colors.green;
-      case 'cancel':
-        return Colors.grey;
-      case 'closed':
-        return Colors.black;
-      default:
-        return Colors.black;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final status = order.orderStatus;
-    final totalAmount = order.totalAmount;
-    final orderDate = order.orderDate;
+    final statusInfo = orderStatus[order.orderStatus] ??
+        {'text': 'Không rõ', 'color': Colors.black};
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColor.border),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Đơn hàng ${order.orderNumber}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              orderDate != null ? '${orderDate.toLocal()}' : '',
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              order.orderDate != null
+                  ? DateFormat('dd/MM/yyyy – HH:mm').format(order.orderDate!)
+                  : "",
+              style: const TextStyle(color: Colors.grey),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${totalAmount.toStringAsFixed(0)} ₫',
+                  '${order.totalAmount.toStringAsFixed(0)} ₫',
                   style: const TextStyle(
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
                   ),
                 ),
+                const Spacer(),
                 Text(
-                  orderStatusMap[status] ?? 'Không rõ',
+                  statusInfo['text'],
                   style: TextStyle(
-                    color: getStatusColor(status),
+                    color: statusInfo['color'],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: onTap,
+                  child: Text(
+                    'Xem chi tiết',
+                    style: TextStyle(color: AppColor.primary),
+                  ),
+                )
               ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: onTap,
-                child: const Text(
-                  'Xem chi tiết',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ),
+            )
           ],
         ),
       ),

@@ -1,6 +1,35 @@
-/// ----------------------------
-/// 🧩 MODEL: Product Variant
-/// ----------------------------
+// ----------------------------
+// 🔧 Helper Safe Parser
+// ----------------------------
+int? toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is String) return int.tryParse(v);
+  return null;
+}
+
+double? toDouble(dynamic v) {
+  if (v == null) return null;
+  if (v is double) return v;
+  if (v is int) return v.toDouble();
+  if (v is String) return double.tryParse(v);
+  return null;
+}
+
+String? toStringSafe(dynamic v) {
+  if (v == null) return null;
+  return v.toString();
+}
+
+List<String> toStringList(dynamic v) {
+  if (v == null) return [];
+  if (v is List) return v.map((e) => e.toString()).toList();
+  return [];
+}
+
+// ----------------------------
+// 🧩 MODEL: Product Variant
+// ----------------------------
 class ProductVariant {
   final int id;
   final String name;
@@ -22,23 +51,13 @@ class ProductVariant {
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
     return ProductVariant(
-      id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
-      name: json['name'] ?? '',
-      sku: json['sku'] ?? '',
-      price: json['price'] != null
-          ? (json['price'] is String
-              ? double.tryParse(json['price']) ?? 0
-              : (json['price'] as num).toDouble())
-          : 0,
-      stockQuantity: json['stock_quantity'] is String
-          ? int.tryParse(json['stock_quantity']) ?? 0
-          : (json['stock_quantity'] ?? 0),
-      weight: json['weight'] != null
-          ? (json['weight'] is String
-              ? double.tryParse(json['weight'])
-              : (json['weight'] as num).toDouble())
-          : null,
-      image: json['image'],
+      id: toInt(json['id']) ?? 0,
+      name: toStringSafe(json['name']) ?? '',
+      sku: toStringSafe(json['sku']) ?? '',
+      price: toDouble(json['price']) ?? 0,
+      stockQuantity: toInt(json['stock_quantity']) ?? 0,
+      weight: toDouble(json['weight']),
+      image: toStringSafe(json['image']),
     );
   }
 
@@ -53,9 +72,9 @@ class ProductVariant {
       };
 }
 
-/// ----------------------------
-/// 🧩 MODEL: Product Images
-/// ----------------------------
+// ----------------------------
+// 🧩 MODEL: Product Images
+// ----------------------------
 class ProductImages {
   final List<String> gallery;
   final String? thumbnail;
@@ -64,11 +83,12 @@ class ProductImages {
       : gallery = gallery ?? [];
 
   factory ProductImages.fromJson(Map<String, dynamic> json) => ProductImages(
-        gallery: (json['gallery'] as List?)?.map((e) => e.toString()).toList() ?? [],
-        thumbnail: json['thumbnail'],
+        gallery: toStringList(json['gallery']),
+        thumbnail: toStringSafe(json['thumbnail']),
       );
 
-  List<String> get all => [if (thumbnail != null) thumbnail!, ...gallery];
+  List<String> get all =>
+      [if (thumbnail != null && thumbnail!.trim().isNotEmpty) thumbnail!, ...gallery];
 
   Map<String, dynamic> toJson() => {
         'gallery': gallery,
@@ -76,9 +96,9 @@ class ProductImages {
       };
 }
 
-/// ----------------------------
-/// 🧩 MODEL: Product Review
-/// ----------------------------
+// ----------------------------
+// 🧩 MODEL: Product Review
+// ----------------------------
 class ProductReview {
   final int id;
   final int productId;
@@ -88,7 +108,7 @@ class ProductReview {
   final String? title;
   final String? content;
   final List<String>? images;
-  final String status; // 'pending' | 'approved' | 'rejected'
+  final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -107,15 +127,15 @@ class ProductReview {
   });
 
   factory ProductReview.fromJson(Map<String, dynamic> json) => ProductReview(
-        id: json['id'] ?? 0,
-        productId: json['product_id'] ?? 0,
-        customerId: json['customer_id'] ?? 0,
-        orderId: json['order_id'],
-        rating: (json['rating'] as num).toDouble(),
-        title: json['title'],
-        content: json['content'],
-        images: (json['images'] as List?)?.map((e) => e.toString()).toList(),
-        status: json['status'] ?? 'pending',
+        id: toInt(json['id']) ?? 0,
+        productId: toInt(json['product_id']) ?? 0,
+        customerId: toInt(json['customer_id']) ?? 0,
+        orderId: toInt(json['order_id']),
+        rating: toDouble(json['rating']) ?? 0,
+        title: toStringSafe(json['title']),
+        content: toStringSafe(json['content']),
+        images: toStringList(json['images']),
+        status: toStringSafe(json['status']) ?? 'pending',
         createdAt: DateTime.parse(json['created_at']),
         updatedAt: DateTime.parse(json['updated_at']),
       );
@@ -135,9 +155,9 @@ class ProductReview {
       };
 }
 
-/// ----------------------------
-/// 🧩 MODEL: Product
-/// ----------------------------
+// ----------------------------
+// 🧩 MODEL: Product
+// ----------------------------
 class Product {
   final int id;
   final String name;
@@ -218,43 +238,49 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
-        id: json['id'] is String ? int.tryParse(json['id']) ?? 0 : (json['id'] ?? 0),
-        name: json['name'] ?? '',
-        slug: json['slug'] ?? '',
-        sku: json['sku'],
-        categoryId: json['category_id'] is String ? int.tryParse(json['category_id']) : json['category_id'],
-        unitId: json['unit_id'] is String ? int.tryParse(json['unit_id']) : json['unit_id'],
-        description: json['description'],
+        id: toInt(json['id']) ?? 0,
+        name: toStringSafe(json['name']) ?? '',
+        slug: toStringSafe(json['slug']) ?? '',
+        sku: toStringSafe(json['sku']),
+        categoryId: toInt(json['category_id']),
+        unitId: toInt(json['unit_id']),
+        description: toStringSafe(json['description']),
         images: json['images'] != null ? ProductImages.fromJson(json['images']) : null,
-        price: json['price'] != null ? (json['price'] is String ? double.tryParse(json['price']) ?? 0 : (json['price'] as num).toDouble()) : 0,
-        comparePrice: json['compare_price'] != null ? (json['compare_price'] is String ? double.tryParse(json['compare_price']) : (json['compare_price'] as num).toDouble()) : null,
-        costPrice: json['cost_price'] != null ? (json['cost_price'] is String ? double.tryParse(json['cost_price']) : (json['cost_price'] as num).toDouble()) : null,
-        weight: json['weight'] != null ? (json['weight'] is String ? double.tryParse(json['weight']) : (json['weight'] as num).toDouble()) : null,
-        dimensions: json['dimensions'],
-        stockQuantity: json['stock_quantity'] is String ? int.tryParse(json['stock_quantity']) ?? 0 : (json['stock_quantity'] ?? 0),
-        minStock: json['min_stock'],
+        price: toDouble(json['price']) ?? 0,
+        comparePrice: toDouble(json['compare_price']),
+        costPrice: toDouble(json['cost_price']),
+        weight: toDouble(json['weight']),
+        dimensions: toStringSafe(json['dimensions']),
+        stockQuantity: toInt(json['stock_quantity']) ?? 0,
+        minStock: toInt(json['min_stock']),
         trackInventory: json['track_inventory'],
         isFresh: json['is_fresh'],
-        shelfLifeDays: json['shelf_life_days'],
-        storageConditions: json['storage_conditions'],
-        origin: json['origin'],
-        harvestSeason: json['harvest_season'],
+        shelfLifeDays: toInt(json['shelf_life_days']),
+        storageConditions: toStringSafe(json['storage_conditions']),
+        origin: toStringSafe(json['origin']),
+        harvestSeason: toStringSafe(json['harvest_season']),
         organicCertified: json['organic_certified'],
         isFeatured: json['is_featured'],
         isActive: json['is_active'],
-        seoTitle: json['seo_title'],
-        seoDescription: json['seo_description'],
-        createdBy: json['created_by'],
-        createdAt: json['created_at']?.toString(),
-        updatedAt: json['updated_at']?.toString(),
-        deletedAt: json['deleted_at']?.toString(),
-        searchVector: json['search_vector'],
-        shortDescription: json['short_description'],
-        specifications: json['specifications'] is Map<String, dynamic> ? json['specifications'] : null,
-        variants: json['variants'] != null ? (json['variants'] as List).map((v) => ProductVariant.fromJson(v)).toList() : null,
-        rating: json['rating'] != null ? (json['rating'] is String ? double.tryParse(json['rating']) : (json['rating'] as num).toDouble()) : null,
-        reviewCount: json['review_count'] is String ? int.tryParse(json['review_count']) : json['review_count'],
-        reviews: json['reviews'] != null ? (json['reviews'] as List).map((r) => ProductReview.fromJson(r)).toList() : [],
+        seoTitle: toStringSafe(json['seo_title']),
+        seoDescription: toStringSafe(json['seo_description']),
+        createdBy: toInt(json['created_by']),
+        createdAt: toStringSafe(json['created_at']),
+        updatedAt: toStringSafe(json['updated_at']),
+        deletedAt: toStringSafe(json['deleted_at']),
+        searchVector: toStringSafe(json['search_vector']),
+        shortDescription: toStringSafe(json['short_description']),
+        specifications: json['specifications'] is Map<String, dynamic>
+            ? json['specifications']
+            : null,
+        variants: json['variants'] != null
+            ? (json['variants'] as List).map((v) => ProductVariant.fromJson(v)).toList()
+            : null,
+        rating: toDouble(json['rating']),
+        reviewCount: toInt(json['review_count']),
+        reviews: json['reviews'] != null
+            ? (json['reviews'] as List).map((r) => ProductReview.fromJson(r)).toList()
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -298,9 +324,9 @@ class Product {
       };
 }
 
-/// ----------------------------
-/// 🧩 MODEL: Pagination
-/// ----------------------------
+// ----------------------------
+// 🧩 MODEL: Pagination
+// ----------------------------
 class PaginationMeta {
   final int currentPage;
   final int totalPages;
@@ -319,25 +345,26 @@ class PaginationMeta {
   });
 
   factory PaginationMeta.fromJson(Map<String, dynamic> json) => PaginationMeta(
-        currentPage: json['current_page'] ?? json['currentPage'] ?? 1,
-        totalPages: json['total_pages'] ?? json['totalPages'] ?? 1,
-        pageSize: json['page_size'] ?? json['pageSize'] ?? 10,
-        totalCount: json['total_count'] ?? json['totalItems'] ?? 0,
+        currentPage: toInt(json['current_page']) ?? toInt(json['currentPage']) ?? 1,
+        totalPages: toInt(json['total_pages']) ?? toInt(json['totalPages']) ?? 1,
+        pageSize: toInt(json['page_size']) ?? toInt(json['pageSize']) ?? 10,
+        totalCount: toInt(json['total_count']) ?? toInt(json['totalItems']) ?? 0,
         hasNext: json['has_next'] ?? json['hasNext'] ?? false,
         hasPrevious: json['has_previous'] ?? json['hasPrevious'] ?? false,
       );
 }
 
-/// ----------------------------
-/// 🧩 MODEL: Product List Response
-/// ----------------------------
+// ----------------------------
+// 🧩 MODEL: Product List Response
+// ----------------------------
 class ProductListResponse {
   final List<Product> data;
   final PaginationMeta pagination;
 
   ProductListResponse({required this.data, required this.pagination});
 
-  factory ProductListResponse.fromJson(Map<String, dynamic> json) => ProductListResponse(
+  factory ProductListResponse.fromJson(Map<String, dynamic> json) =>
+      ProductListResponse(
         data: (json['data'] as List).map((p) => Product.fromJson(p)).toList(),
         pagination: PaginationMeta.fromJson(json['pagination']),
       );

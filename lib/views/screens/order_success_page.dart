@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/core/models/order_model.dart';
-import 'package:marketky/views/screens/page_switcher.dart';
+import 'package:marketky/views/screens/my_order_page.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   final Order order;
@@ -11,6 +11,15 @@ class OrderSuccessPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tự động điều hướng đến MyOrdersPage sau 3 giây
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => MyOrdersPage(orderId: order.orderNumber),
+        ),
+      );
+    });
+
     return Scaffold(
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
@@ -24,11 +33,15 @@ class OrderSuccessPage extends StatelessWidget {
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
                 onPressed: () {
-                  // Mở danh sách đơn hàng
-                  // Bạn có thể điều hướng sang MyOrdersPage
+                  // Điều hướng đến MyOrdersPage ngay lập tức
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => MyOrdersPage(orderId: order.orderNumber),
+                    ),
+                  );
                 },
                 child: const Text(
-                  'Your Orders',
+                  'Xem đơn hàng của bạn',
                   style: TextStyle(color: AppColor.secondary, fontWeight: FontWeight.w500),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -44,10 +57,10 @@ class OrderSuccessPage extends StatelessWidget {
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => PageSwitcher()));
+                  Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 child: const Text(
-                  'Continue Shopping',
+                  'Tiếp tục mua sắm',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -75,7 +88,7 @@ class OrderSuccessPage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             const Text(
-              'Order Success! 😆',
+              'Đặt hàng thành công! 😆',
               style: TextStyle(
                   color: AppColor.secondary,
                   fontSize: 24,
@@ -83,7 +96,7 @@ class OrderSuccessPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'We have received your order\nOrder ID: ${order.orderNumber}',
+              'Chúng tôi đã nhận được đơn hàng của bạn\nMã đơn hàng: ${order.orderNumber}',
               style: TextStyle(
                 color: AppColor.secondary.withOpacity(0.8),
               ),

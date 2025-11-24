@@ -26,7 +26,7 @@ class WelcomePage extends StatelessWidget {
                 Container(
                   margin: EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'MarketKy',
+                    'Nông Sản Sạch',
                     style: TextStyle(
                       color: AppColor.secondary,
                       fontWeight: FontWeight.w700,

@@ -6,11 +6,13 @@ class SelectableVariant extends StatefulWidget {
   final List<ProductVariant> variants;
   final Function(ProductVariant) onVariantSelected;
   final EdgeInsetsGeometry? margin;
+  final double? runSpacing;
 
   SelectableVariant({
     required this.variants,
     required this.onVariantSelected,
     this.margin,
+    this.runSpacing,
   });
 
   @override
@@ -24,6 +26,7 @@ class _SelectableVariantState extends State<SelectableVariant> {
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 12,
+      runSpacing: widget.runSpacing ?? 8,
       children: List.generate(widget.variants.length, (index) {
         final variant = widget.variants[index];
         final isSelected = index == _selectedIndex;

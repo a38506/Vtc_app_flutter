@@ -15,8 +15,8 @@ class EmptyCartPage extends StatelessWidget {
         elevation: 0,
         title: Column(
           children: [
-            Text('Your Cart', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
-            Text('Empty', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7))),
+            Text('Giỏ hàng của bạn', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
+            Text('đang trống', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7))),
           ],
         ),
         leading: IconButton(
@@ -40,7 +40,7 @@ class EmptyCartPage extends StatelessWidget {
               child: SvgPicture.asset('assets/icons/Paper Bag.svg'),
             ),
             Text(
-              'Empty Cart  ☹️',
+              'Giỏ hàng trống  ☹️',
               style: TextStyle(
                 color: AppColor.secondary,
                 fontSize: 24,
@@ -51,7 +51,7 @@ class EmptyCartPage extends StatelessWidget {
             Container(
               margin: EdgeInsets.only(bottom: 48, top: 12),
               child: Text(
-                'Go to home and explore our interesting \nproducts and add to cart',
+                'Hãy về trang chủ và khám phá các sản phẩm thú vị \n của chúng tôi và thêm vào giỏ hàng',
                 style: TextStyle(color: AppColor.secondary.withOpacity(0.8)),
                 textAlign: TextAlign.center,
               ),
@@ -61,7 +61,7 @@ class EmptyCartPage extends StatelessWidget {
                 Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => PageSwitcher()));
               },
               child: Text(
-                'Start Shopping',
+                'Bắt đầu mua sẳm',
                 style: TextStyle(fontWeight: FontWeight.w600, color: AppColor.secondary),
               ),
               style: ElevatedButton.styleFrom(

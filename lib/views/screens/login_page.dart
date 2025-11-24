@@ -4,9 +4,9 @@ import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/views/screens/page_switcher.dart';
 import 'package:marketky/views/screens/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../views/screens/forgot_password_page.dart';
 
 import '../../core/services/auth_service.dart';
-import '../../core/models/auth_response.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -34,7 +34,9 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final authResponse = await AuthService.login(email, password);
 
-      if (authResponse != null && authResponse.success && authResponse.token.isNotEmpty) {
+      if (authResponse != null &&
+          authResponse.success &&
+          authResponse.token.isNotEmpty) {
         // Lưu token vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', authResponse.token);
@@ -69,7 +71,8 @@ class _LoginPageState extends State<LoginPage> {
         elevation: 0,
         title: Text(
           'Đăng nhập',
-          style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       bottomNavigationBar: Container(
@@ -78,9 +81,11 @@ class _LoginPageState extends State<LoginPage> {
         alignment: Alignment.center,
         child: TextButton(
           onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => RegisterPage()));
           },
-          style: TextButton.styleFrom(foregroundColor: AppColor.secondary.withOpacity(0.1)),
+          style: TextButton.styleFrom(
+              foregroundColor: AppColor.secondary.withOpacity(0.1)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -122,7 +127,10 @@ class _LoginPageState extends State<LoginPage> {
           SizedBox(height: 12),
           Text(
             'Vui lòng đăng nhập để tiếp tục sử dụng ứng dụng.',
-            style: TextStyle(color: AppColor.secondary.withOpacity(0.7), fontSize: 12, height: 1.5),
+            style: TextStyle(
+                color: AppColor.secondary.withOpacity(0.7),
+                fontSize: 12,
+                height: 1.5),
           ),
           SizedBox(height: 32),
           // Email
@@ -133,9 +141,11 @@ class _LoginPageState extends State<LoginPage> {
               hintText: 'email@domain.com',
               prefixIcon: Container(
                 padding: EdgeInsets.all(12),
-                child: SvgPicture.asset('assets/icons/Message.svg', color: AppColor.primary),
+                child: SvgPicture.asset('assets/icons/Message.svg',
+                    color: AppColor.primary),
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 10, horizontal: 14),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: AppColor.border, width: 1),
                 borderRadius: BorderRadius.circular(8),
@@ -157,9 +167,11 @@ class _LoginPageState extends State<LoginPage> {
               hintText: '**********',
               prefixIcon: Container(
                 padding: EdgeInsets.all(12),
-                child: SvgPicture.asset('assets/icons/Lock.svg', color: AppColor.primary),
+                child: SvgPicture.asset('assets/icons/Lock.svg',
+                    color: AppColor.primary),
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 10, horizontal: 14),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: AppColor.border, width: 1),
                 borderRadius: BorderRadius.circular(8),
@@ -177,8 +189,10 @@ class _LoginPageState extends State<LoginPage> {
                   });
                 },
                 icon: _obscurePassword
-                    ? SvgPicture.asset('assets/icons/Hide.svg', color: AppColor.primary)
-                    : SvgPicture.asset('assets/icons/Show.svg', color: AppColor.primary),
+                    ? SvgPicture.asset('assets/icons/Hide.svg',
+                        color: AppColor.primary)
+                    : SvgPicture.asset('assets/icons/Show.svg',
+                        color: AppColor.primary),
               ),
             ),
           ),
@@ -187,7 +201,12 @@ class _LoginPageState extends State<LoginPage> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ForgotPasswordPage()),
+                );
+              },
               child: Text(
                 'Quên mật khẩu?',
                 style: TextStyle(
@@ -204,7 +223,8 @@ class _LoginPageState extends State<LoginPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.primary,
               padding: EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               elevation: 0,
               shadowColor: Colors.transparent,
             ),

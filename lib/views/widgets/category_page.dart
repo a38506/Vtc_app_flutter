@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/core/models/product_model.dart';
-import 'package:marketky/core/services/cart_service.dart';
+import 'package:marketky/core/helpers/cart_helper.dart';
 import 'package:marketky/views/screens/cart_page.dart';
 import 'package:marketky/views/screens/empty_cart_page.dart';
 import 'package:marketky/views/screens/message_page.dart';
@@ -12,6 +12,7 @@ import 'package:marketky/views/widgets/custom_icon_button_widget.dart';
 import 'package:marketky/views/widgets/dummy_search_widget_1.dart';
 import 'package:marketky/views/widgets/item_card.dart';
 import 'package:marketky/core/services/search_service.dart';
+import 'package:marketky/core/services/cart_service.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({Key? key}) : super(key: key);
@@ -28,27 +29,26 @@ class _CategoryPageState extends State<CategoryPage> {
   void initState() {
     super.initState();
     _loadProducts();
+    CartHelper.init(); // Khởi tạo CartHelper
   }
 
   Future<void> _loadProducts() async {
-  // Gọi API theo search
-  final featuredProducts = await SearchService.searchProducts(
-    isFeatured: true,
-    page: 2
-  );
+    final featuredProducts = await SearchService.searchProducts(
+      isFeatured: true,
+      page: 2,
+    );
 
-  final priceMinProducts = await SearchService.searchProducts(
-    priceMin: 1000, 
-    
-    sortOrder: "asc",
-  );
+    final priceMinProducts = await SearchService.searchProducts(
+      priceMin: 1000,
+      sortOrder: "asc",
+    );
 
-  setState(() {
-    newProducts = featuredProducts.take(4).toList();
-    bestSellers = priceMinProducts.take(4).toList();
-  });
-}
-
+    if (!mounted) return;
+    setState(() {
+      newProducts = featuredProducts.take(4).toList();
+      bestSellers = priceMinProducts.take(4).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,28 +87,35 @@ class _CategoryPageState extends State<CategoryPage> {
                       ),
                       Row(
                         children: [
-                          CustomIconButtonWidget(
-                            onTap: () async {
-                              final cart = await CartService.getCart();
-                              if (cart != null && cart.items.isNotEmpty) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CartPage(initialCartItems: cart.items),
-                                  ),
-                                );
-                              } else {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) => EmptyCartPage()),
-                                );
-                              }
+                          // ---------------- Icon Cart with ValueListenableBuilder ----------------
+                          ValueListenableBuilder<int>(
+                            valueListenable: CartHelper.cartItemCount,
+                            builder: (context, count, _) {
+                              return CustomIconButtonWidget(
+                                onTap: () async {
+                                  final cart = await CartService.getCart();
+                                  if (cart != null && cart.items.isNotEmpty) {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            CartPage(initialCartItems: cart.items),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => EmptyCartPage(),
+                                      ),
+                                    );
+                                  }
+                                },
+                                value: count,
+                                icon: SvgPicture.asset(
+                                  'assets/icons/Bag.svg',
+                                  color: Colors.white,
+                                ),
+                              );
                             },
-                            value: 0,
-                            icon: SvgPicture.asset(
-                              'assets/icons/Bag.svg',
-                              color: Colors.white,
-                            ),
                           ),
                           SizedBox(width: 16),
                           CustomIconButtonWidget(

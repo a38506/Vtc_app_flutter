@@ -1,78 +1,207 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marketky/constants/app_color.dart';
-import 'package:marketky/core/models/Notification.dart';
-import 'package:marketky/core/services/NotificationService.dart';
-import 'package:marketky/views/widgets/main_app_bar_widget.dart';
-import 'package:marketky/views/widgets/menu_tile_widget.dart';
-import 'package:marketky/views/widgets/notification_tile.dart';
+import 'package:intl/intl.dart';
+import '../../core/services/order_service.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/models/order_model.dart';
+import '../../constants/app_color.dart';
+import '../screens/order_detail_page.dart';
 
 class NotificationPage extends StatefulWidget {
+  const NotificationPage({Key? key}) : super(key: key);
+
   @override
   _NotificationPageState createState() => _NotificationPageState();
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  List<UserNotification> listNotification = NotificationService.listNotification;
+  List<Order> orderNotifications = [];
+  bool isLoading = true;
+
+  // Trạng thái đơn hàng
+  final Map<String, Map<String, dynamic>> orderStatus = {
+    'pending': {'text': 'Chờ xử lý', 'color': AppColor.accent},
+    'processing': {'text': 'Đang xử lý', 'color': AppColor.primary},
+    'shipped': {'text': 'Đang vận chuyển', 'color': Colors.blue},
+    'completed': {'text': 'Đã nhận', 'color': Colors.green},
+    'cancelled': {'text': 'Đã hủy', 'color': Colors.grey},
+  };
+
+  final List<Map<String, String>> promos = [
+    {
+      'title': '11.11 Nhận ngay 1000 xu',
+      'subtitle': 'Áp dụng cho mọi đơn hàng từ 0đ',
+    },
+    {
+      'title': 'Black Friday Giảm 50%',
+      'subtitle': 'Chỉ áp dụng hôm nay',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrderNotifications();
+  }
+
+  Future<void> _loadOrderNotifications() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      await AuthService.getToken();
+      final orders = await OrderService.getMyOrders();
+      setState(() {
+        orderNotifications = orders.map((e) => Order.fromJson(e)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Load notifications failed: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String formatDate(DateTime? dt) {
+    if (dt == null) return '';
+    return DateFormat('dd/MM/yyyy – HH:mm').format(dt);
+  }
+
+  Color _lighterPrimary(double amount) {
+    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColor.primary)),
+      );
+    }
+
     return Scaffold(
-      appBar: MainAppBar(
-        cartValue: 2,
-        chatValue: 2,
+      appBar: AppBar(
+        backgroundColor: _lighterPrimary(0.1),
+        elevation: 1,
+        centerTitle: true,
+        title: const Text(
+          "Thông báo",
+          style: TextStyle(
+            color: AppColor.primarySoft,
+            fontSize: 19,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColor.primarySoft),
       ),
-      body: ListView(
-        shrinkWrap: true,
-        physics: BouncingScrollPhysics(),
-        children: [
-          // Section 1 - Menu
-          MenuTileWidget(
-            onTap: () {},
-            icon: SvgPicture.asset(
-              'assets/icons/Discount.svg',
-              color: AppColor.secondary.withOpacity(0.5),
-            ),
-            title: 'Product Promo',
-            subtitle: 'Lorem ipsum Dolor sit Amet',
-          ),
-          MenuTileWidget(
-            onTap: () {},
-            icon: SvgPicture.asset(
-              'assets/icons/Info Square.svg',
-              color: AppColor.secondary.withOpacity(0.5),
-            ),
-            title: 'Marketky Info',
-            subtitle: 'Lorem ipsum Dolor sit Amet',
-          ),
-          // Section 2 - Status ( LIST )
-          Container(
-            width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Column(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ================= VOUCHER / PROMO =================
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: EdgeInsets.only(left: 16, bottom: 8),
-                  child: Text(
-                    'ORDERS STATUS',
-                    style: TextStyle(color: AppColor.secondary.withOpacity(0.5), letterSpacing: 6 / 100, fontWeight: FontWeight.w600),
-                  ),
+                Text(
+                  "Dành riêng cho bạn",
+                  style: TextStyle(
+                      color: AppColor.secondary.withOpacity(0.7),
+                      fontWeight: FontWeight.bold),
                 ),
-                ListView.builder(
-                  itemBuilder: (context, index) {
-                    return NotificationTile(
-                      data: listNotification[index],
-                      onTap: () {},
-                    );
-                  },
-                  itemCount: listNotification.length,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                ),
+                const SizedBox(height: 8),
+                ...promos.map((promo) {
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(
+                        bottom: 12), // cách nhau giữa các promo
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColor.primarySoft,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          promo['title']!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColor.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          promo['subtitle']!,
+                          style: const TextStyle(color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ],
             ),
-          )
-        ],
+
+            const SizedBox(height: 16),
+
+            // ================= DANH SÁCH THÔNG BÁO =================
+            Text(
+              "Thông báo đơn hàng",
+              style: TextStyle(
+                  color: AppColor.secondary.withOpacity(0.7), fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            ...orderNotifications.map((order) {
+              final status = orderStatus[order.orderStatus] ??
+                  {'text': order.orderStatus, 'color': Colors.grey};
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColor.border),
+                ),
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  onTap: () async {
+                    // Mở chi tiết đơn hàng
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderDetailPage(orderId: order.id),
+                      ),
+                    );
+                    _loadOrderNotifications();
+                  },
+                  title: Text(
+                    "Đơn #${order.orderNumber}",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: AppColor.secondary),
+                  ),
+                  subtitle: Text(
+                    "Ngày đặt: ${formatDate(order.orderDate)}",
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  trailing: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: (status['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      status['text'],
+                      style: TextStyle(
+                          color: status['color'], fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
+        ),
       ),
     );
   }

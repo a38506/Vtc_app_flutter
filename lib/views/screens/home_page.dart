@@ -7,6 +7,7 @@ import 'package:marketky/core/models/product_model.dart';
 import 'package:marketky/core/services/CategoryService.dart';
 import 'package:marketky/core/services/product_service.dart';
 import 'package:marketky/core/services/cart_service.dart';
+import 'package:marketky/core/helpers/cart_helper.dart';
 import 'package:marketky/views/screens/cart_page.dart';
 import 'package:marketky/views/screens/empty_cart_page.dart';
 import 'package:marketky/views/screens/message_page.dart';
@@ -25,7 +26,6 @@ class _HomePageState extends State<HomePage> {
   List<Product> productData = [];
   List<dynamic> banners = [];
 
-  // Banner carousel
   PageController _pageController = PageController(viewportFraction: 1.0);
   int _currentBannerPage = 0;
   Timer? _bannerTimer;
@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadProducts();
     _fetchMockBanners();
+    CartHelper.init(); // Khởi tạo CartHelper để ValueNotifier hoạt động
   }
 
   Future<void> _loadProducts() async {
@@ -66,7 +67,6 @@ class _HomePageState extends State<HomePage> {
     ];
 
     if (!mounted) return;
-
     setState(() {
       banners = mockData;
     });
@@ -134,28 +134,34 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Row(
                         children: [
-                          CustomIconButtonWidget(
-                            onTap: () async {
-                              final cart = await CartService.getCart();
-                              if (cart != null && cart.items.isNotEmpty) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CartPage(initialCartItems: cart.items),
-                                  ),
-                                );
-                              } else {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) => EmptyCartPage()),
-                                );
-                              }
+                          // ---------------- Cart icon with ValueNotifier ----------------
+                          ValueListenableBuilder<int>(
+                            valueListenable: CartHelper.cartItemCount,
+                            builder: (context, count, _) {
+                              return CustomIconButtonWidget(
+                                value: count,
+                                icon: SvgPicture.asset(
+                                  'assets/icons/Bag.svg',
+                                  color: Colors.white,
+                                ),
+                                onTap: () async {
+                                  final cart = await CartService.getCart();
+                                  if (cart != null && cart.items.isNotEmpty) {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            CartPage(initialCartItems: cart.items),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                          builder: (context) => EmptyCartPage()),
+                                    );
+                                  }
+                                },
+                              );
                             },
-                            value: 0,
-                            icon: SvgPicture.asset(
-                              'assets/icons/Bag.svg',
-                              color: Colors.white,
-                            ),
                           ),
                           SizedBox(width: 16),
                           CustomIconButtonWidget(
@@ -220,7 +226,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 SizedBox(height: 8),
-                // Dot indicator
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(

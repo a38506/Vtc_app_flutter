@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketky/constants/app_color.dart';
@@ -34,24 +35,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final picker = ImagePicker();
     final pickedFile =
         await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (pickedFile != null) {
-      setState(() => _avatarFile = File(pickedFile.path));
-    }
+    if (pickedFile != null) setState(() => _avatarFile = File(pickedFile.path));
   }
 
   Future<void> _saveProfile() async {
     setState(() => _loading = true);
-
     try {
       String? avatarPath = widget.user?['avartar'];
-
       if (_avatarFile != null) {
-        final uploadRequest =
-            http.MultipartRequest('POST', Uri.parse('$baseUrl/profile/me/upload-avatar'));
-        uploadRequest.files
-            .add(await http.MultipartFile.fromPath('avatar', _avatarFile!.path));
+        final uploadRequest = http.MultipartRequest(
+            'POST', Uri.parse('$baseUrl/profile/me/upload-avatar'));
+        uploadRequest.files.add(
+            await http.MultipartFile.fromPath('avatar', _avatarFile!.path));
         final uploadResponse = await uploadRequest.send();
-
         if (uploadResponse.statusCode == 200) {
           final respStr = await uploadResponse.stream.bytesToString();
           final data = json.decode(respStr);
@@ -60,7 +56,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
 
       final token = await AuthService.getToken();
-
       final response = await http.patch(
         Uri.parse('$baseUrl/profile/me'),
         headers: {
@@ -76,111 +71,173 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cập nhật thông tin thành công')),
+          const SnackBar(content: Text('Cập nhật thông tin thành công')),
         );
         Navigator.of(context).pop(json.decode(response.body));
       } else {
         throw Exception('Cập nhật thất bại: ${response.body}');
       }
     } catch (e) {
-      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e')),
       );
     }
-
     setState(() => _loading = false);
+  }
+
+  Widget _buildTextField({
+    required String label,
+    TextEditingController? controller,
+    String? hintText,
+    bool readOnly = false,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      style: const TextStyle(color: AppColor.secondary),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        labelStyle: const TextStyle(color: AppColor.secondary),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColor.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColor.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColor.primary, width: 1),
+        ),
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
+  Color _lighterPrimary(double amount) {
+    // Nhạt màu primary theo % amount (0.0 - 1.0)
+    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // toàn trang trắng như login
       appBar: AppBar(
-        title: const Text('Chỉnh sửa thông tin'),
-        backgroundColor: AppColor.primary,
+        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
+        elevation: 1,
+        centerTitle: false,
+        title: const Text(
+          'Chỉnh sửa thông tin',
+          style: TextStyle(
+            color: AppColor.primarySoft,
+            fontSize: 19,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColor.primarySoft),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Avatar
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: _avatarFile != null
-                              ? FileImage(_avatarFile!)
-                              : (widget.user?['avartar'] != null
-                                  ? NetworkImage(widget.user!['avartar'])
-                                  : AssetImage('assets/images/pp.jpg')
-                                      as ImageProvider),
-                        ),
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: AppColor.primary,
-                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
-                        ),
-                      ],
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        physics: const BouncingScrollPhysics(),
+        children: [
+          if (_loading)
+            const Center(
+                child: CircularProgressIndicator(color: AppColor.primary))
+          else ...[
+            // Avatar
+            Center(
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: AppColor.primarySoft,
+                      backgroundImage: _avatarFile != null
+                          ? FileImage(_avatarFile!)
+                          : (widget.user?['avartar'] != null
+                              ? NetworkImage(widget.user!['avartar'])
+                              : const AssetImage('assets/images/pp.jpg')
+                                  as ImageProvider),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Họ tên
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Họ tên',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Số điện thoại
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Số điện thoại',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Vai trò (read-only)
-                  TextFormField(
-                    initialValue: widget.user?['role_name'] ?? 'Khách hàng',
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Vai trò',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Nút lưu
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColor.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2)),
+                        ],
                       ),
-                      child: const Text(
-                        'Lưu thông tin',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                      padding: const EdgeInsets.all(6),
+                      child:
+                          const Icon(Icons.edit, color: Colors.white, size: 20),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+            const SizedBox(height: 32),
+            // Name
+            _buildTextField(
+                label: 'Họ tên',
+                controller: _nameController,
+                hintText: 'Nhập họ tên'),
+            const SizedBox(height: 16),
+            // Phone
+            _buildTextField(
+              label: 'Số điện thoại',
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              readOnly: false,
+            ),
+
+            const SizedBox(height: 16),
+            // Role (read-only)
+            _buildTextField(
+              label: 'Vai trò',
+              controller: TextEditingController(text: 'Khách hàng'),
+              readOnly: true,
+            ),
+            const SizedBox(height: 32),
+            // Save button
+            ElevatedButton(
+              onPressed: _saveProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 74, 74, 146),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: _loading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'Lưu thông tin',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ]
+        ],
+      ),
     );
   }
 }
-

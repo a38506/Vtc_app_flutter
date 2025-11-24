@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/views/screens/login_page.dart';
+import 'package:marketky/views/screens/reset_password_page.dart';
 import 'package:marketky/views/widgets/main_app_bar_widget.dart';
 import 'package:marketky/views/widgets/menu_tile_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/auth_service.dart';
 import 'address_page.dart';
 import 'my_order_page.dart';
 import 'edit_profile_page.dart';
+import 'package:marketky/core/helpers/cart_helper.dart'; // <-- thêm import
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -23,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
+    CartHelper.init(); // Khởi tạo CartHelper để cập nhật số lượng giỏ hàng
   }
 
   /// 🔹 Load thông tin user từ SharedPreferences
@@ -51,7 +53,18 @@ class _ProfilePageState extends State<ProfilePage> {
     final String? avatar = _user?['avartar']; // API trả về 'avartar'
 
     return Scaffold(
-      appBar: MainAppBar(cartValue: 2, chatValue: 2),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: ValueListenableBuilder<int>(
+          valueListenable: CartHelper.cartItemCount,
+          builder: (context, cartCount, _) {
+            return MainAppBar(
+              cartValue: cartCount, // <-- dùng cart dynamic
+              chatValue: 2,
+            );
+          },
+        ),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -104,8 +117,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      // Nút chỉnh sửa thông tin
                     ],
                   ),
                 ),
@@ -128,7 +139,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
-                      // Mục mới: Thay đổi thông tin cá nhân
                       MenuTileWidget(
                         onTap: () {
                           Navigator.of(context).push(
@@ -139,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                         margin: const EdgeInsets.only(top: 10),
                         icon: SvgPicture.asset(
-                          'assets/icons/User.svg', // icon đại diện người dùng
+                          'assets/icons/profile.svg',
                           color: AppColor.secondary.withOpacity(0.5),
                         ),
                         title: 'Thông tin cá nhân',
@@ -166,8 +176,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       MenuTileWidget(
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const MyOrdersPage()),
+                            MaterialPageRoute(builder: (_) => const MyOrdersPage()),
                           );
                         },
                         icon: SvgPicture.asset(
@@ -222,8 +231,32 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       MenuTileWidget(
-                        onTap: () {},
+                        onTap: () async {
+                          final token = await AuthService.getToken();
+                          if (token != null) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ResetPasswordPage(),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      "Không tìm thấy token, vui lòng đăng nhập lại")),
+                            );
+                          }
+                        },
                         margin: const EdgeInsets.only(top: 10),
+                        icon: SvgPicture.asset(
+                          'assets/icons/Lock.svg',
+                          color: AppColor.secondary.withOpacity(0.5),
+                        ),
+                        title: 'Đổi mật khẩu',
+                        subtitle: 'Thay đổi mật khẩu đăng nhập',
+                      ),
+                      MenuTileWidget(
+                        onTap: () {},
                         icon: SvgPicture.asset(
                           'assets/icons/Filter.svg',
                           color: AppColor.secondary.withOpacity(0.5),
