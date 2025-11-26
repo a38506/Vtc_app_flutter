@@ -8,13 +8,13 @@ import 'package:marketky/views/screens/profile_page.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override
-  _PageSwitcherState createState() => _PageSwitcherState();
+  PageSwitcherState createState() => PageSwitcherState();
 }
 
-class _PageSwitcherState extends State<PageSwitcher> {
+class PageSwitcherState extends State<PageSwitcher> {
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
+  void switchToTab(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -30,24 +30,42 @@ class _PageSwitcherState extends State<PageSwitcher> {
         ProfilePage(),
       ][_selectedIndex],
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColor.primarySoft, width: 2))),
+        decoration: BoxDecoration(
+            border:
+                Border(top: BorderSide(color: AppColor.primarySoft, width: 2))),
         child: BottomNavigationBar(
-          onTap: _onItemTapped,
+          onTap: switchToTab,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: [
             (_selectedIndex == 0)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Home.svg'), label: ''),
+                ? BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Home-active.svg'),
+                    label: '')
+                : BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Home.svg'), label: ''),
             (_selectedIndex == 1)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Category.svg'), label: ''),
+                ? BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Category-active.svg'),
+                    label: '')
+                : BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Category.svg'),
+                    label: ''),
             (_selectedIndex == 2)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Notification.svg'), label: ''),
+                ? BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                        'assets/icons/Notification-active.svg'),
+                    label: '')
+                : BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Notification.svg'),
+                    label: ''),
             (_selectedIndex == 3)
-                ? BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile-active.svg'), label: '')
-                : BottomNavigationBarItem(icon: SvgPicture.asset('assets/icons/Profile.svg'), label: ''),
+                ? BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Profile-active.svg'),
+                    label: '')
+                : BottomNavigationBarItem(
+                    icon: SvgPicture.asset('assets/icons/Profile.svg'),
+                    label: ''),
           ],
         ),
       ),

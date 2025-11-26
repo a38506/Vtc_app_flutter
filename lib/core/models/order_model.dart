@@ -11,6 +11,7 @@ class OrderItem {
   final double unitPrice;
   final String? batchNumber;
   final DateTime? expiryDate;
+  final String? image;
 
   OrderItem({
     required this.id,
@@ -23,6 +24,7 @@ class OrderItem {
     required this.unitPrice,
     this.batchNumber,
     this.expiryDate,
+    this.image,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,7 @@ class OrderItem {
       expiryDate: json['expiry_date'] != null
           ? DateTime.tryParse(json['expiry_date'])
           : null,
+      image: json['image'],
     );
   }
 

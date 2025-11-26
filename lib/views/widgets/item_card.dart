@@ -3,107 +3,154 @@ import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/core/models/product_model.dart';
 import 'package:marketky/views/screens/product_detail.dart';
 import 'package:intl/intl.dart';
-import 'rating_tag.dart';
+import 'package:marketky/core/services/category_service.dart';
 
-class ItemCard extends StatelessWidget {
+class ItemCard extends StatefulWidget {
   final Product product;
   final Color titleColor;
   final Color priceColor;
+  final VoidCallback? onTap;
 
   ItemCard({
+    Key? key,
     required this.product,
     this.titleColor = Colors.black,
-    this.priceColor = AppColor.primary,
-  });
+    this.priceColor = AppColor.accent,
+    this.onTap,
+  }) : super(key: key);
+
+  @override
+  _ItemCardState createState() => _ItemCardState();
+}
+
+class _ItemCardState extends State<ItemCard> {
+  Map<dynamic, String> _categoryMap = {};
+  bool _loadingCategories = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // có thể load danh mục ở đây nếu cần
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Lấy ảnh đầu tiên, nếu không có thì fallback
-    String? imageUrl = (product.images?.all.isNotEmpty ?? false)
-        ? product.images!.all.first
-        : null;
+    // Lấy ảnh ưu tiên: gallery/thumbnail/all
+    String? imageUrl = (widget.product.images?.all.isNotEmpty ?? false)
+        ? widget.product.images!.all.first
+        : (widget.product.images?.thumbnail ?? null);
 
     ImageProvider imageProvider;
     if (imageUrl != null && imageUrl.startsWith('http')) {
       imageProvider = NetworkImage(imageUrl);
     } else {
-      imageProvider = AssetImage('assets/images/default.png');
+      imageProvider = const AssetImage('assets/images/default.png');
     }
 
+    final bool isFresh = widget.product.isFresh ?? false;
+
+    final priceText = NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+        .format(widget.product.price);
+
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => ProductDetail(product: product)),
-        );
-      },
+      onTap: widget.onTap ??
+          () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => ProductDetail(product: widget.product)),
+            );
+          },
       child: Container(
         width: MediaQuery.of(context).size.width / 2 - 16 - 8,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.grey.withOpacity(0.3), // màu viền
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColor.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2), // màu shadow
-              blurRadius: 8,
-              offset: Offset(0, 4),
+              color: AppColor.primary.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // item image
+            // Image area
             Container(
-              width: double.infinity,
               height: MediaQuery.of(context).size.width / 2 - 16 - 8,
-              padding: EdgeInsets.all(10),
-              alignment: Alignment.topLeft,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                image: DecorationImage(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
-                ),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(14)),
+                image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
               ),
-              child: RatingTag(value: product.rating ?? 0.0),
+              child: Stack(
+                children: [
+                  // category chip (top-left)
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColor.primary.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        (isFresh ? "Tươi ngon" : "Tươi ngon"),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  // price badge (bottom-right)
+                  
+                ],
+              ),
             ),
-            // item details
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+
+            // Info area
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.name,
+                    widget.product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: titleColor,
+                      color: widget.titleColor == Colors.black
+                          ? AppColor.secondary
+                          : widget.titleColor,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                        .format(product.price),
+                    priceText,
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Roboto',
-                      color: priceColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: widget.priceColor,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    product.shortDescription ?? '',
+                    widget.product.shortDescription ?? '',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10,
-                    ),
+                        color: AppColor.secondary.withOpacity(0.7),
+                        fontSize: 12),
                   ),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),

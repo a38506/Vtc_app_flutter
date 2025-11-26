@@ -1,8 +1,8 @@
-// location_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:marketky/constants/api_constants.dart';
 
+/// Model Tỉnh/Thành phố
 class Province {
   final String code;
   final String name;
@@ -17,6 +17,7 @@ class Province {
   }
 }
 
+/// Model Quận/Huyện
 class District {
   final String code;
   final String name;
@@ -31,6 +32,7 @@ class District {
   }
 }
 
+/// Model Phường/Xã
 class Ward {
   final String code;
   final String name;
@@ -60,7 +62,6 @@ class LocationService {
         throw Exception('Failed to load provinces');
       }
     } catch (e) {
-      print('❌ Lỗi khi lấy provinces: $e');
       return [];
     }
   }
@@ -69,7 +70,8 @@ class LocationService {
   Future<List<District>> getDistricts(String provinceId) async {
     if (provinceId.isEmpty) return [];
     try {
-      final response = await http.get(Uri.parse('$baseUrl/districts/$provinceId'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/districts/$provinceId'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -78,7 +80,6 @@ class LocationService {
         throw Exception('Failed to load districts');
       }
     } catch (e) {
-      print('❌ Lỗi khi lấy districts cho province $provinceId: $e');
       return [];
     }
   }
@@ -96,9 +97,7 @@ class LocationService {
         throw Exception('Failed to load wards');
       }
     } catch (e) {
-      print('❌ Lỗi khi lấy wards cho district $districtId: $e');
       return [];
     }
   }
 }
- 

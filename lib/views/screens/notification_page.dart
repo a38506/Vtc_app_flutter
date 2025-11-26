@@ -73,136 +73,257 @@ class _NotificationPageState extends State<NotificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColor.primary)),
-      );
-    }
+    final headerBg = LinearGradient(
+      colors: [AppColor.primary.withOpacity(0.06), AppColor.primarySoft],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.1),
-        elevation: 1,
+        backgroundColor: _lighterPrimary(0.08),
+        elevation: 0,
         centerTitle: true,
         title: const Text(
           "Thông báo",
           style: TextStyle(
-            color: AppColor.primarySoft,
+            color: AppColor.primary,
             fontSize: 19,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColor.primarySoft),
+        iconTheme: const IconThemeData(color: AppColor.primary),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ================= VOUCHER / PROMO =================
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Dành riêng cho bạn",
-                  style: TextStyle(
-                      color: AppColor.secondary.withOpacity(0.7),
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                ...promos.map((promo) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(
-                        bottom: 12), // cách nhau giữa các promo
-                    padding: const EdgeInsets.all(16),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColor.primary))
+          : RefreshIndicator(
+              onRefresh: _loadOrderNotifications,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Header / Promo area
+                  Container(
                     decoration: BoxDecoration(
-                      color: AppColor.primarySoft,
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: headerBg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColor.border),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
                       children: [
-                        Text(
-                          promo['title']!,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
                             color: AppColor.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.notifications_active, color: Colors.white, size: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Cập nhật đơn hàng & chương trình',
+                                style: TextStyle(
+                                  color: AppColor.primary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Nhận thông báo về trạng thái đơn hàng và khuyến mãi mới nhất.',
+                                style: TextStyle(color: Colors.black87),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          promo['subtitle']!,
-                          style: const TextStyle(color: Colors.black87),
-                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () => _loadOrderNotifications(),
+                          child: const Text('Làm mới', style: TextStyle(color: Colors.white)),
+                        )
                       ],
                     ),
-                  );
-                }).toList(),
-              ],
-            ),
+                  ),
 
-            const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-            // ================= DANH SÁCH THÔNG BÁO =================
-            Text(
-              "Thông báo đơn hàng",
-              style: TextStyle(
-                  color: AppColor.secondary.withOpacity(0.7), fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+                  // Promo horizontal list
+                  SizedBox(
+                    height: 120,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: promos.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, idx) {
+                        final promo = promos[idx];
+                        return Container(
+                          width: 260,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColor.primarySoft,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColor.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                promo['title']!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColor.primary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                promo['subtitle']!,
+                                style: const TextStyle(color: Colors.black87),
+                              ),
+                              const Spacer(),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColor.accent,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  onPressed: () {},
+                                  child: const Text('Xem', style: TextStyle(color: Colors.white)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
-            ...orderNotifications.map((order) {
-              final status = orderStatus[order.orderStatus] ??
-                  {'text': order.orderStatus, 'color': Colors.grey};
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColor.border),
-                ),
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  onTap: () async {
-                    // Mở chi tiết đơn hàng
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OrderDetailPage(orderId: order.id),
+                  const SizedBox(height: 18),
+
+                  // Section title
+                  const Text(
+                    "Thông báo đơn hàng",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.secondary),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Notifications list
+                  if (orderNotifications.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      decoration: BoxDecoration(
+                        color: AppColor.primarySoft,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColor.border),
                       ),
-                    );
-                    _loadOrderNotifications();
-                  },
-                  title: Text(
-                    "Đơn #${order.orderNumber}",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: AppColor.secondary),
-                  ),
-                  subtitle: Text(
-                    "Ngày đặt: ${formatDate(order.orderDate)}",
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  trailing: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: (status['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      child: Column(
+                        children: const [
+                          Icon(Icons.notifications_off, size: 48, color: AppColor.primary),
+                          SizedBox(height: 12),
+                          Text('Chưa có thông báo', style: TextStyle(color: Colors.black54)),
+                        ],
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: orderNotifications.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) {
+                        final order = orderNotifications[i];
+                        final status = orderStatus[order.orderStatus] ??
+                            {'text': order.orderStatus, 'color': Colors.grey};
+                        final statusColor = status['color'] as Color;
+                        return InkWell(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => OrderDetailPage(orderId: order.id),
+                              ),
+                            );
+                            _loadOrderNotifications();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColor.border),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: AppColor.primarySoft,
+                                  child: Icon(Icons.shopping_bag, color: AppColor.primary),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Đơn #${order.orderNumber}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700, color: AppColor.secondary),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        "Ngày: ${formatDate(order.orderDate)}",
+                                        style: const TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        status['text'],
+                                        style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Icon(Icons.chevron_right, color: Colors.black26),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    child: Text(
-                      status['text'],
-                      style: TextStyle(
-                          color: status['color'], fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
+                ],
+              ),
+            ),
     );
   }
 }

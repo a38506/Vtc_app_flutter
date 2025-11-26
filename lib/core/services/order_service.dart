@@ -23,8 +23,6 @@ class OrderService {
     if (response.statusCode == 201) {
       return Order.fromJson(jsonDecode(response.body));
     } else {
-      print('❌ Failed to create order: ${response.statusCode}');
-      print('Response: ${response.body}');
       throw Exception(
           'Failed to create order: ${response.statusCode} ${response.body}');
     }
@@ -35,7 +33,7 @@ class OrderService {
     final token = await AuthService.getToken();
 
     final response = await http.post(
-      Uri.parse('$baseUrl/orders'), // Dùng chung endpoint /orders
+      Uri.parse('$baseUrl/orders'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -44,11 +42,8 @@ class OrderService {
     );
 
     if (response.statusCode == 201) {
-      print('✅ Order BuyNow created successfully');
       return Order.fromJson(jsonDecode(response.body));
     } else {
-      print('❌ Failed to create BuyNow order: ${response.statusCode}');
-      print('Response: ${response.body}');
       throw Exception(
           'Failed to create BuyNow order: ${response.statusCode} ${response.body}');
     }
@@ -124,8 +119,6 @@ class OrderService {
       "items": items,
     };
 
-    print('📦 Request body: ${jsonEncode(body)}');
-
     final response = await http.post(
       Uri.parse('$baseUrl/shipping/options'),
       headers: {
@@ -134,8 +127,6 @@ class OrderService {
       },
       body: jsonEncode(body),
     );
-
-    print('📬 Response (${response.statusCode}): ${response.body}');
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -155,7 +146,6 @@ class OrderService {
 
   /// Áp dụng voucher
   static Future<double> applyVoucher(String voucherCode) async {
-    // Nếu có API voucher, gọi API tại đây. Hiện placeholder:
     if (voucherCode.isNotEmpty) {
       return 10.0; // Giảm giá cố định
     }

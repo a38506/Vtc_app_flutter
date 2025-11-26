@@ -205,7 +205,7 @@ class _CategoryPageState extends State<CategoryPage> {
           return ItemCard(
             product: product,
             titleColor: Colors.black,
-            priceColor: AppColor.primary,
+            priceColor: AppColor.accent,
           );
         },
       ),

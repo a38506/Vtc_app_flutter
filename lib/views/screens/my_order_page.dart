@@ -84,26 +84,93 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final headerGradient = LinearGradient(
+      colors: [AppColor.primary.withOpacity(0.06), AppColor.primarySoft],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
-        elevation: 1,
-        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
         title: const Text(
           'Đơn hàng của tôi',
           style: TextStyle(
-            color: AppColor.primarySoft,
-            fontSize: 19,
+            color: AppColor.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColor.primarySoft),
+        iconTheme: const IconThemeData(color: AppColor.primary),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: headerGradient,
+            border: Border(
+              bottom: BorderSide(color: AppColor.border),
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---------------- luôn hiện FILTER ----------------
+            // Header / summary
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColor.primarySoft,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColor.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColor.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.receipt_long, color: Colors.white, size: 26),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quản lý đơn hàng',
+                          style: TextStyle(
+                              color: AppColor.primary, fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Xem trạng thái đơn, chi tiết và lịch sử giao hàng',
+                          style: TextStyle(color: AppColor.secondary.withOpacity(0.8), fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadOrders,
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColor.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Làm mới'),
+                  )
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Filters as chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -115,15 +182,13 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                   ),
                   const SizedBox(width: 8),
                   ...orderStatus.entries.map((e) {
-                    return Row(
-                      children: [
-                        FilterButton(
-                          title: e.value['text'],
-                          isSelected: selectedFilter == e.value['text'],
-                          onTap: () => applyFilter(e.value['text']),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterButton(
+                        title: e.value['text'],
+                        isSelected: selectedFilter == e.value['text'],
+                        onTap: () => applyFilter(e.value['text']),
+                      ),
                     );
                   }).toList(),
                 ],
@@ -132,34 +197,45 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
 
             const SizedBox(height: 16),
 
-            // ---------------- LIST OR EMPTY ----------------
+            // List or empty
             Expanded(
               child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator(color: AppColor.primary))
                   : filteredOrders.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Không có đơn hàng nào ở trạng thái này.',
-                            style: TextStyle(color: Colors.grey, fontSize: 15),
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.inventory_2, size: 64, color: AppColor.primarySoft),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Không có đơn hàng',
+                                style: TextStyle(color: AppColor.secondary.withOpacity(0.8), fontSize: 16),
+                              ),
+                            ],
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: filteredOrders.length,
-                          itemBuilder: (context, index) {
-                            return OrderCard(
-                              order: filteredOrders[index],
-                              orderStatus: orderStatus,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => OrderDetailPage(
-                                        orderId: filteredOrders[index].id),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                      : RefreshIndicator(
+                          onRefresh: _loadOrders,
+                          color: AppColor.primary,
+                          child: ListView.separated(
+                            itemCount: filteredOrders.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              return OrderCard(
+                                order: filteredOrders[index],
+                                orderStatus: orderStatus,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => OrderDetailPage(orderId: filteredOrders[index].id),
+                                    ),
+                                  ).then((_) => _loadOrders());
+                                },
+                              );
+                            },
+                          ),
                         ),
             ),
           ],
@@ -183,16 +259,28 @@ class FilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? const Color.fromARGB(255, 74, 74, 146) : Colors.white,
-        foregroundColor: isSelected ? Colors.white : AppColor.secondary,
-        side:
-            BorderSide(color: isSelected ? const Color.fromARGB(255, 74, 74, 146) : AppColor.border),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColor.primary : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColor.primary : AppColor.border),
+          boxShadow: isSelected
+              ? [BoxShadow(color: AppColor.primary.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 2))]
+              : null,
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColor.secondary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
       ),
-      child: Text(title, style: const TextStyle(fontSize: 13)),
     );
   }
 }
@@ -211,57 +299,80 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusInfo = orderStatus[order.orderStatus] ??
-        {'text': 'Không rõ', 'color': Colors.black};
+    final statusInfo = orderStatus[order.orderStatus] ?? {'text': 'Không rõ', 'color': AppColor.secondary};
+    final statusColor = statusInfo['color'] as Color;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColor.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColor.border),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Row(
           children: [
-            Text(
-              'Đơn hàng ${order.orderNumber}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            // Thumbnail: if order has items with image try to show first, fallback to icon
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColor.primarySoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: order.items != null && order.items!.isNotEmpty && order.items!.first.image != null && order.items!.first.image!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          order.items!.first.image!,
+                          fit: BoxFit.cover,
+                          width: 64,
+                          height: 64,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: AppColor.secondary),
+                        ),
+                      )
+                    : const Icon(Icons.shopping_bag, color: AppColor.primary, size: 30),
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              order.orderDate != null
-                  ? DateFormat('dd/MM/yyyy – HH:mm').format(order.orderDate!)
-                  : "",
-              style: const TextStyle(color: Colors.grey),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Đơn #${order.orderNumber}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                  const SizedBox(height: 6),
+                  Text(
+                    order.orderDate != null ? DateFormat('dd/MM/yyyy – HH:mm').format(order.orderDate!) : '',
+                    style: TextStyle(color: AppColor.secondary.withOpacity(0.7), fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${order.totalAmount.toStringAsFixed(0)} ₫',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '${order.totalAmount.toStringAsFixed(0)} ₫',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
                   ),
+                  child: Text(statusInfo['text'], style: TextStyle(color: statusColor, fontWeight: FontWeight.w700)),
                 ),
-                const Spacer(),
-                Text(
-                  statusInfo['text'],
-                  style: TextStyle(
-                    color: statusInfo['color'],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 12),
+                const SizedBox(height: 8),
                 TextButton(
                   onPressed: onTap,
-                  child: Text(
-                    'Xem chi tiết',
-                    style: TextStyle(color: AppColor.primary),
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: AppColor.primary),
+                  child: const Text('Xem chi tiết'),
                 )
               ],
             )

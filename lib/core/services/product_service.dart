@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../constants/api_constants.dart';
 import '../models/product_model.dart';
+import '../services/auth_service.dart';
 
 class ProductService {
   static const String baseUrl = ApiConstants.API_BASE;
@@ -20,8 +21,30 @@ class ProductService {
         throw Exception('Failed to load products');
       }
     } catch (e) {
-      print('Error fetching products: $e');
       return [];
+    }
+  }
+
+  /// Lấy sản phẩm theo ID
+  static Future<Product?> getProductById(int productId) async {
+    try {
+      final token = await AuthService.getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/products/$productId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        return Product.fromJson(jsonData);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
     }
   }
 }

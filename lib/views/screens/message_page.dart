@@ -23,8 +23,8 @@ class _MessagePageState extends State<MessagePage> {
         elevation: 0,
         title: Column(
           children: [
-            Text('Message', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
-            Text('1 Unreaded', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7))),
+            Text('Tin nhắn', style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
+            Text('1 tin nhắn chưa đọc', style: TextStyle(fontSize: 10, color: Colors.black.withOpacity(0.7))),
           ],
         ),
         leading: IconButton(

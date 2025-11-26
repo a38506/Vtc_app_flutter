@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constants/app_color.dart';
 import 'package:marketky/views/screens/login_page.dart';
 import 'package:marketky/views/screens/reset_password_page.dart';
+import 'package:marketky/views/screens/wishlist_page.dart';
 import 'package:marketky/views/widgets/main_app_bar_widget.dart';
 import 'package:marketky/views/widgets/menu_tile_widget.dart';
 import '../../core/services/auth_service.dart';
@@ -34,7 +35,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _user = userData;
       _loading = false;
     });
-    print("👤 User data loaded: $_user");
   }
 
   /// 🔹 Xử lý đăng xuất
@@ -156,7 +156,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         subtitle: 'Chỉnh sửa họ tên, số điện thoại, avatar',
                       ),
                       MenuTileWidget(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const WishlistPage()),
+                          );
+                        },
                         icon: SvgPicture.asset(
                           'assets/icons/Heart.svg',
                           color: AppColor.secondary.withOpacity(0.5),

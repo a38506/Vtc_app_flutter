@@ -24,23 +24,15 @@ class AddressService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
         return data.map((e) => Address.fromJson(e)).toList();
-      } else {
-        print('Failed to fetch addresses: ${response.body}');
-        return [];
       }
-    } catch (e) {
-      print('Error fetching addresses: $e');
-      return [];
-    }
+    } catch (_) {}
+    return [];
   }
 
   /// Thêm địa chỉ
   static Future<bool> addAddress(Map<String, dynamic> payload) async {
     final url = Uri.parse('$baseUrl/customers/addresses');
     final token = await AuthService.getToken();
-
-    print('Sending payload: ${jsonEncode(payload)}'); // Log payload
-    print('Using token: $token');
 
     try {
       final response = await http.post(
@@ -51,21 +43,19 @@ class AddressService {
         },
         body: jsonEncode(payload),
       );
-
       return response.statusCode == 201;
-    } catch (e) {
-      print('Error adding address: $e');
+    } catch (_) {
       return false;
     }
   }
 
   static Future<bool> addAddressModel(Address address) {
-  return addAddress(address.toJson());
-}
-
+    return addAddress(address.toJson());
+  }
 
   /// Sửa địa chỉ
-  static Future<bool> updateAddress(int addressId, Map<String, dynamic> payload) async {
+  static Future<bool> updateAddress(
+      int addressId, Map<String, dynamic> payload) async {
     final url = Uri.parse('$baseUrl/customers/addresses/$addressId');
     final token = await AuthService.getToken();
 
@@ -78,15 +68,8 @@ class AddressService {
         },
         body: jsonEncode(payload),
       );
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        print('Failed to update address: ${response.body}');
-        return false;
-      }
-    } catch (e) {
-      print('Error updating address: $e');
+      return response.statusCode == 200;
+    } catch (_) {
       return false;
     }
   }
@@ -104,10 +87,8 @@ class AddressService {
           'Authorization': 'Bearer $token',
         },
       );
-
       return response.statusCode == 204;
-    } catch (e) {
-      print('Error deleting address: $e');
+    } catch (_) {
       return false;
     }
   }
@@ -126,10 +107,8 @@ class AddressService {
         },
         body: jsonEncode({'is_default': true}),
       );
-
       return response.statusCode == 200;
-    } catch (e) {
-      print('Error setting default address: $e');
+    } catch (_) {
       return false;
     }
   }

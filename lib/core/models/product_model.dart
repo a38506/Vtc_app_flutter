@@ -1,6 +1,5 @@
-// ----------------------------
-// 🔧 Helper Safe Parser
-// ----------------------------
+import 'category_model.dart';
+
 int? toInt(dynamic v) {
   if (v == null) return null;
   if (v is int) return v;
@@ -196,6 +195,8 @@ class Product {
   final double? rating;
   final int? reviewCount;
   final List<ProductReview>? reviews;
+  final Category? category;
+  final String? category_name;
 
   Product({
     required this.id,
@@ -235,6 +236,8 @@ class Product {
     this.rating,
     this.reviewCount,
     this.reviews,
+    this.category,
+    this.category_name,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
@@ -281,6 +284,10 @@ class Product {
         reviews: json['reviews'] != null
             ? (json['reviews'] as List).map((r) => ProductReview.fromJson(r)).toList()
             : [],
+        category: json['category'] != null ? Category.fromJson(json['category']) : null,
+        category_name: json['category_name'] != null
+            ? toStringSafe(json['category_name'])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -321,6 +328,8 @@ class Product {
         'rating': rating,
         'review_count': reviewCount,
         'reviews': reviews?.map((r) => r.toJson()).toList(),
+        'category': category?.toJson(),
+        'category_name': category_name,
       };
 }
 
