@@ -54,40 +54,57 @@ class _CategoryPageState extends State<CategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
-        physics: BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         children: [
-          // ---------------- HEADER ----------------
+          // ============ HEADER SECTION (giống HomePage) ============
           Container(
-            height: 190,
+            height: 200,
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.jpg'),
-                fit: BoxFit.cover,
+              gradient: LinearGradient(
+                colors: [
+                  AppColor.primary,
+                  AppColor.primary.withOpacity(0.85),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColor.primary.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                )
+              ],
             ),
             child: Column(
               children: [
                 Container(
-                  margin: EdgeInsets.only(top: 26),
-                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  margin: const EdgeInsets.only(top: 26),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Khám phá\ncác loại trái cây.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          height: 1.5,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          'Khám phá\ncác loại trái cây.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            height: 1.5,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       Row(
                         children: [
-                          // ---------------- Icon Cart with ValueListenableBuilder ----------------
+                          // ============ Icon Cart with ValueListenableBuilder ============
                           ValueListenableBuilder<int>(
                             valueListenable: CartHelper.cartItemCount,
                             builder: (context, count, _) {
@@ -97,8 +114,8 @@ class _CategoryPageState extends State<CategoryPage> {
                                   if (cart != null && cart.items.isNotEmpty) {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            CartPage(initialCartItems: cart.items),
+                                        builder: (context) => CartPage(
+                                            initialCartItems: cart.items),
                                       ),
                                     );
                                   } else {
@@ -117,7 +134,7 @@ class _CategoryPageState extends State<CategoryPage> {
                               );
                             },
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 10),
                           CustomIconButtonWidget(
                             onTap: () {
                               Navigator.of(context).push(
@@ -137,44 +154,115 @@ class _CategoryPageState extends State<CategoryPage> {
                     ],
                   ),
                 ),
-                DummySearchWidget1(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => SearchPage()),
-                    );
-                  },
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: DummySearchWidget1(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => SearchPage()),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
           ),
 
-          // ---------------- SẢN PHẨM NỔI BẬT ----------------
+          // ============ SẢN PHẨM NỔI BẬT ============
           Padding(
-            padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
-            child: Text(
-              'Sản phẩm nổi bật',
-              style: TextStyle(
-                color: AppColor.secondary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            padding: const EdgeInsets.only(left: 16, top: 20, bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sản phẩm nổi bật',
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Những sản phẩm được yêu thích',
+                      style: TextStyle(
+                        color: AppColor.secondary.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'Xem tất cả',
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                )
+              ],
             ),
           ),
           _buildProductGrid(newProducts),
 
-          // ---------------- BÁN CHẠY NHẤT ----------------
+          // ============ BÁN CHẠY NHẤT ============
           Padding(
-            padding: EdgeInsets.only(left: 16, top: 16, bottom: 8),
-            child: Text(
-              'Bán chạy nhất',
-              style: TextStyle(
-                color: AppColor.secondary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            padding: const EdgeInsets.only(left: 16, top: 20, bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bán chạy nhất',
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Những sản phẩm bán chạy nhất',
+                      style: TextStyle(
+                        color: AppColor.secondary.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'Xem tất cả',
+                      style: TextStyle(
+                        color: AppColor.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                )
+              ],
             ),
           ),
+
           _buildProductGrid(bestSellers),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -184,17 +272,31 @@ class _CategoryPageState extends State<CategoryPage> {
     if (products.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: Center(child: Text('Không có sản phẩm nào')),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.shopping_bag_outlined,
+                  size: 48, color: AppColor.primarySoft),
+              const SizedBox(height: 12),
+              Text(
+                'Không có sản phẩm nào',
+                style: TextStyle(
+                  color: AppColor.secondary.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GridView.builder(
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: products.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,

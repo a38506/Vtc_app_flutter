@@ -77,11 +77,6 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
     }
   }
 
-  Color _lighterPrimary(double amount) {
-    // Nhạt màu primary theo % amount (0.0 - 1.0)
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
-
   @override
   Widget build(BuildContext context) {
     final headerGradient = LinearGradient(
@@ -92,26 +87,19 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white.withOpacity(0.95),
+        elevation: 1,
         centerTitle: true,
         title: const Text(
-          'Đơn hàng của tôi',
+          "Đơn hàng",
           style: TextStyle(
             color: AppColor.primary,
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
         iconTheme: const IconThemeData(color: AppColor.primary),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: headerGradient,
-            border: Border(
-              bottom: BorderSide(color: AppColor.border),
-            ),
-          ),
-        ),
+        
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

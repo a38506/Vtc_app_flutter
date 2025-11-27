@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:marketky/constants/app_color.dart';
@@ -125,27 +124,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Color _lighterPrimary(double amount) {
-    // Nhạt màu primary theo % amount (0.0 - 1.0)
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // toàn trang trắng như login
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
+        backgroundColor: Colors.white.withOpacity(0.95),
         elevation: 1,
-        centerTitle: false,
+        centerTitle: true,
         title: const Text(
-          'Chỉnh sửa thông tin',
+          "Thông tin cá nhân",
           style: TextStyle(
-            color: AppColor.primarySoft,
-            fontSize: 19,
+            color: AppColor.primary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColor.primarySoft),
+        iconTheme: const IconThemeData(color: AppColor.primary),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -169,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ? FileImage(_avatarFile!)
                           : (widget.user?['avartar'] != null
                               ? NetworkImage(widget.user!['avartar'])
-                              : const AssetImage('assets/images/pp.jpg')
+                              : const AssetImage('assets/images/default_user.jpg')
                                   as ImageProvider),
                     ),
                     Container(

@@ -29,7 +29,7 @@ class _NotificationPageState extends State<NotificationPage> {
   final List<Map<String, String>> promos = [
     {
       'title': '11.11 Nhận ngay 1000 xu',
-      'subtitle': 'Áp dụng cho mọi đơn hàng từ 0đ',
+      'subtitle': 'Áp dụng cho đơn hàng từ 0đ',
     },
     {
       'title': 'Black Friday Giảm 50%',
@@ -67,10 +67,6 @@ class _NotificationPageState extends State<NotificationPage> {
     return DateFormat('dd/MM/yyyy – HH:mm').format(dt);
   }
 
-  Color _lighterPrimary(double amount) {
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
-
   @override
   Widget build(BuildContext context) {
     final headerBg = LinearGradient(
@@ -81,15 +77,15 @@ class _NotificationPageState extends State<NotificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.08),
-        elevation: 0,
+        backgroundColor: Colors.white.withOpacity(0.95),
+        elevation: 1,
         centerTitle: true,
         title: const Text(
           "Thông báo",
           style: TextStyle(
             color: AppColor.primary,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
           ),
         ),
         iconTheme: const IconThemeData(color: AppColor.primary),

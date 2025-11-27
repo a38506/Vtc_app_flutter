@@ -8,6 +8,7 @@ import 'package:marketky/core/services/address_service.dart';
 import 'package:marketky/views/screens/order_success_page.dart';
 import 'package:marketky/views/screens/address_page.dart';
 import 'package:marketky/constants/app_color.dart';
+import 'package:marketky/views/screens/momo_payment_page.dart';
 
 class CartPage extends StatefulWidget {
   final List<CartItemWithProductDetails> initialCartItems;
@@ -165,6 +166,36 @@ class _CartPageState extends State<CartPage> {
       return;
     }
 
+    // Nếu payment method là momo => yêu cầu xác nhận trước khi gửi đơn
+    if ((_paymentMethod ?? '').toString().toLowerCase() == 'momo') {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Xác nhận thanh toán'),
+          content: const Text(
+            'Bạn sẽ được chuyển tới trang thanh toán MoMo. '
+            'Nếu bạn hủy thanh toán, đơn sẽ không được gửi.\n\n'
+            'Bạn có muốn tiếp tục?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Tiếp tục'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) {
+        // Người dùng hủy => không gửi đơn
+        return;
+      }
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -190,22 +221,72 @@ class _CartPageState extends State<CartPage> {
         "items": items,
       };
 
+      print('===== CREATE ORDER =====');
+      print('Payment Method: $_paymentMethod');
+      print(body);
+
       final createdOrder = await OrderService.createOrder(body);
+
+      print('===== ORDER RESPONSE =====');
+      print(createdOrder);
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
+      if (_paymentMethod.toLowerCase() == 'momo' &&
+          createdOrder['paymentUrl'] != null) {
+        final paymentUrl = createdOrder['paymentUrl'];
+        final orderId = createdOrder['order']['id'];
+        final totalAmount =
+            double.parse(createdOrder['order']['total_amount'].toString());
+
+        print('Redirecting to MoMo: $paymentUrl');
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => MoMoPaymentPage(
+              orderId: int.parse(orderId.toString()),
+              totalAmount: totalAmount,
+              momoQrUrl: paymentUrl,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // COD hoặc fallback
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => OrderSuccessPage(order: createdOrder),
+          builder: (_) => OrderSuccessPage(
+            order: createdOrder['order'] as Map<String, dynamic>,
+          ),
         ),
       );
     } catch (e) {
+      print('Checkout error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Thanh toán thất bại: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _checkOrderPayment(int orderId) async {
+    try {
+      final order = await OrderService.getOrderById(orderId);
+      if (order.paymentStatus == 'paid' || order.paymentStatus == 'completed') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => OrderSuccessPage(order: order.toJson())),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chưa thanh toán. Vui lòng thử lại sau vài phút.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi kiểm tra: $e')),
+      );
     }
   }
 
@@ -387,9 +468,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Color _lighterPrimary(double amount) {
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -397,14 +475,14 @@ class _CartPageState extends State<CartPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.08),
-        elevation: 0,
+        backgroundColor: Colors.white.withOpacity(0.95),
+        elevation: 1,
         centerTitle: true,
         title: const Text(
-          'Giỏ hàng',
+          "Giỏ hàng",
           style: TextStyle(
             color: AppColor.primary,
-            fontSize: 19,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -582,8 +660,7 @@ class _CartPageState extends State<CartPage> {
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
                                         color: AppColor.primarySoft,
-                                        borderRadius:
-                                            BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: const Icon(Icons.remove,
                                           color: AppColor.primary, size: 16),
@@ -601,8 +678,7 @@ class _CartPageState extends State<CartPage> {
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
                                         color: AppColor.primary,
-                                        borderRadius:
-                                            BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: const Icon(Icons.add,
                                           color: Colors.white, size: 16),
@@ -641,8 +717,8 @@ class _CartPageState extends State<CartPage> {
                             decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 hintText: 'Nhập mã khuyến mãi',
-                                hintStyle:
-                                    TextStyle(color: Colors.grey, fontSize: 13)),
+                                hintStyle: TextStyle(
+                                    color: Colors.grey, fontSize: 13)),
                           ),
                         ),
                         TextButton(
@@ -693,8 +769,7 @@ class _CartPageState extends State<CartPage> {
                         priceRow('Tạm tính', _productsTotal),
                         priceRow('Phí vận chuyển', _shippingFee),
                         if (_discount > 0)
-                          priceRow('Giảm giá', -_discount,
-                              color: Colors.red),
+                          priceRow('Giảm giá', -_discount, color: Colors.red),
                         const Divider(color: AppColor.border),
                         priceRow('Tổng cộng', subtotal,
                             isBold: true, color: AppColor.primary),
@@ -710,7 +785,8 @@ class _CartPageState extends State<CartPage> {
                       onPressed: _isLoading ? null : _checkout,
                       style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.primary,
-                          disabledBackgroundColor: AppColor.primary.withOpacity(0.5),
+                          disabledBackgroundColor:
+                              AppColor.primary.withOpacity(0.5),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12))),
@@ -721,8 +797,7 @@ class _CartPageState extends State<CartPage> {
                               child: CircularProgressIndicator(
                                   color: Colors.white, strokeWidth: 2),
                             )
-                          : Text(
-                              'Thanh toán ${subtotal.toStringAsFixed(0)} ₫',
+                          : Text('Thanh toán ${subtotal.toStringAsFixed(0)} ₫',
                               style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,

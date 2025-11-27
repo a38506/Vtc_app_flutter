@@ -330,20 +330,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             {'text': orderDetail!.paymentStatus!, 'color': Colors.black}
         : null;
 
-    Color _lighterPrimary(double amount) {
-      return Color.alphaBlend(
-          Colors.white.withOpacity(amount), AppColor.primary);
-    }
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.06),
-        elevation: 0,
-        title: const Text(
-          'Chi tiết đơn hàng',
-          style: TextStyle(color: AppColor.primary, fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+        backgroundColor: Colors.white.withOpacity(0.95),
+        elevation: 1,
         centerTitle: true,
+        title: const Text(
+          "Chi tiết đơn hàng",
+          style: TextStyle(
+            color: AppColor.primary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         iconTheme: const IconThemeData(color: AppColor.primary),
       ),
       body: SingleChildScrollView(

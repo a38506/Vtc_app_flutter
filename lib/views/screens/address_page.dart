@@ -44,10 +44,15 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   Future<void> _loadProvinces() async {
-    final data = await _locationService.getProvinces();
+    final data = await _location_service_getSafe();
     setState(() {
       provinces = data;
     });
+  }
+
+  // small wrapper to avoid analyzer warnings in patch view
+  Future<List<Province>> _location_service_getSafe() async {
+    return await _locationService.getProvinces();
   }
 
   Future<void> _loadDistricts(String provinceCode) async {
@@ -125,7 +130,7 @@ class _AddressPageState extends State<AddressPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => StatefulBuilder(
@@ -146,11 +151,11 @@ class _AddressPageState extends State<AddressPage> {
                     width: 50,
                     height: 5,
                     decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: AppColor.border,
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   isEditing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới',
                   textAlign: TextAlign.center,
@@ -159,40 +164,74 @@ class _AddressPageState extends State<AddressPage> {
                       fontWeight: FontWeight.bold,
                       color: AppColor.primary),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 12),
+                Text(
+                  'Điền thông tin chính xác để giao hàng nhanh chóng.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColor.secondary.withOpacity(0.7)),
+                ),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    labelText: 'Tên người nhận',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                    hintText: 'Tên người nhận',
+                    prefixIcon: Icon(Icons.person, color: AppColor.primary),
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: AppColor.border),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                          const BorderSide(color: AppColor.primary, width: 1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   validator: (v) =>
                       v == null || v.isEmpty ? 'Vui lòng nhập tên' : null,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
-                    labelText: 'Số điện thoại',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                    hintText: 'Số điện thoại',
+                    prefixIcon: Icon(Icons.phone, color: AppColor.primary),
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: AppColor.border),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                          const BorderSide(color: AppColor.primary, width: 1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Vui lòng nhập SĐT';
-                    if (!RegExp(r'^\d{10,11}$').hasMatch(v))
+                    if (!RegExp(r'^\d{10,11}$').hasMatch(v)) {
                       return 'SĐT không hợp lệ';
+                    }
                     return null;
                   },
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: provinceCode,
                   decoration: InputDecoration(
                     labelText: 'Tỉnh/Thành phố',
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColor.border)),
                   ),
                   items: provinces
                       .map((p) =>
@@ -209,13 +248,16 @@ class _AddressPageState extends State<AddressPage> {
                   validator: (v) =>
                       v == null ? 'Vui lòng chọn Tỉnh/Thành phố' : null,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: districtCode,
                   decoration: InputDecoration(
                     labelText: 'Quận/Huyện',
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColor.border)),
                   ),
                   items: districts
                       .map((d) =>
@@ -231,13 +273,16 @@ class _AddressPageState extends State<AddressPage> {
                   validator: (v) =>
                       v == null ? 'Vui lòng chọn Quận/Huyện' : null,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: wardCode,
                   decoration: InputDecoration(
                     labelText: 'Phường/Xã',
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColor.border)),
                   ),
                   items: wards
                       .map((w) =>
@@ -247,38 +292,53 @@ class _AddressPageState extends State<AddressPage> {
                   validator: (v) =>
                       v == null ? 'Vui lòng chọn Phường/Xã' : null,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _addressController,
                   decoration: InputDecoration(
-                    labelText: 'Địa chỉ chi tiết',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                    hintText: 'Địa chỉ chi tiết',
+                    prefixIcon: Icon(Icons.home, color: AppColor.primary),
+                    filled: true,
+                    fillColor: AppColor.primarySoft,
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: AppColor.border),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                          const BorderSide(color: AppColor.primary, width: 1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   validator: (v) =>
                       v == null || v.isEmpty ? 'Vui lòng nhập địa chỉ' : null,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Checkbox(
                         value: _isDefault,
+                        activeColor: AppColor.primary,
                         onChanged: (v) =>
                             setModalState(() => _isDefault = v ?? false)),
-                    Text('Đặt làm địa chỉ mặc định')
+                    Text('Đặt làm địa chỉ mặc định',
+                        style:
+                            TextStyle(color: AppColor.secondary.withOpacity(0.8)))
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _saveAddress,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primary,
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
                   child: Text(isEditing ? 'Cập nhật' : 'Lưu địa chỉ',
-                      style: TextStyle(fontSize: 16)),
+                      style: const TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ],
             ),
@@ -335,101 +395,129 @@ class _AddressPageState extends State<AddressPage> {
     }
   }
 
-  Color _lighterPrimary(double amount) {
-    // Nhạt màu primary theo % amount (0.0 - 1.0)
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _lighterPrimary(0.1), // nhạt 20%
-        elevation: 1,
-        centerTitle: false,
+        backgroundColor: Colors.white.withOpacity(0.98),
+        elevation: 0,
+        centerTitle: true,
         title: const Text(
-          'Địa chỉ của tôi',
+          "Địa chỉ của tôi",
           style: TextStyle(
-            color: AppColor.primarySoft,
-            fontSize: 19,
+            color: AppColor.primary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColor.primarySoft),
+        iconTheme: const IconThemeData(color: AppColor.primary),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(color: AppColor.primary),
+            )
           : addresses.isEmpty
               ? Center(
-                  child: Text('Bạn chưa có địa chỉ nào.',
-                      style: TextStyle(color: Colors.grey)))
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.location_off,
+                          size: 64, color: AppColor.primarySoft),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Bạn chưa có địa chỉ nào.',
+                        style: TextStyle(
+                            color: AppColor.secondary.withOpacity(0.8)),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Thêm địa chỉ để giao hàng nhanh chóng.',
+                        style: TextStyle(
+                            color: AppColor.secondary.withOpacity(0.6),
+                            fontSize: 13),
+                      ),
+                    ],
+                  ),
+                )
               : ListView.builder(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   itemCount: addresses.length,
                   itemBuilder: (context, index) {
                     final a = addresses[index];
                     return Card(
-                      margin: EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      elevation: 3,
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 2,
+                      shadowColor: AppColor.primary.withOpacity(0.08),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
+                            vertical: 14, horizontal: 16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.location_on,
-                                color: AppColor.primary, size: 28),
-                            SizedBox(width: 10),
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppColor.primarySoft,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.location_on,
+                                  color: AppColor.primary, size: 24),
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      Text(a.name,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15)),
+                                      Expanded(
+                                        child: Text(a.name,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15)),
+                                      ),
                                       if (a.isDefault)
                                         Container(
-                                          margin: EdgeInsets.only(left: 6),
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
+                                          margin: const EdgeInsets.only(left: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                              color: Colors.green.shade100,
+                                              color: AppColor.primary.withOpacity(0.12),
                                               borderRadius:
-                                                  BorderRadius.circular(6)),
+                                                  BorderRadius.circular(8)),
                                           child: Text('Mặc định',
                                               style: TextStyle(
-                                                  color: Colors.green[800],
+                                                  color: AppColor.primary,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600)),
                                         ),
                                     ],
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 6),
                                   Text('${a.phone}',
-                                      style:
-                                          TextStyle(color: Colors.grey[700])),
-                                  SizedBox(height: 4),
+                                      style: TextStyle(color: AppColor.secondary.withOpacity(0.8))),
+                                  const SizedBox(height: 6),
                                   Text(
                                     '${a.address}, ${a.wardName ?? ''}, ${a.districtName ?? ''}, ${a.provinceName ?? ''}',
-                                    style: TextStyle(color: Colors.grey[800]),
+                                    style: TextStyle(color: AppColor.secondary.withOpacity(0.85)),
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   Row(
                                     children: [
                                       TextButton.icon(
                                         onPressed: () =>
                                             _showAddressForm(address: a),
-                                        icon: Icon(Icons.edit, size: 18),
-                                        label: Text('Sửa'),
+                                        icon: Icon(Icons.edit, size: 18, color: AppColor.primary),
+                                        label: Text('Sửa', style: TextStyle(color: AppColor.primary)),
                                       ),
+                                      const SizedBox(width: 8),
                                       TextButton.icon(
                                         onPressed: () => _deleteAddress(a.id),
-                                        icon: Icon(Icons.delete, size: 18),
-                                        label: Text('Xóa'),
+                                        icon: Icon(Icons.delete, size: 18, color: Colors.redAccent),
+                                        label: Text('Xóa', style: TextStyle(color: Colors.redAccent)),
                                       ),
                                     ],
                                   ),
@@ -443,10 +531,18 @@ class _AddressPageState extends State<AddressPage> {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 74, 74, 146),
+        backgroundColor: AppColor.primary,
         onPressed: () => _showAddressForm(),
-        child: Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
   }
 }

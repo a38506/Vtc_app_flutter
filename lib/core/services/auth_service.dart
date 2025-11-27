@@ -72,8 +72,6 @@ class AuthService {
         body: jsonEncode({'name': name, 'email': email, 'password': password}),
       );
 
-      final data = jsonDecode(response.body);
-
       if (response.statusCode == 201) {
         return "Đăng ký thành công!";
       } else {

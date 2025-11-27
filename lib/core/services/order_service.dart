@@ -7,9 +7,13 @@ import 'package:marketky/core/services/auth_service.dart';
 class OrderService {
   static const String baseUrl = ApiConstants.API_BASE;
 
-  /// Tạo đơn hàng mới
-  static Future<Order> createOrder(Map<String, dynamic> body) async {
+  /// Tạo đơn hàng mới - trả về Map chứa order + paymentUrl
+  static Future<Map<String, dynamic>> createOrder(Map<String, dynamic> body) async {
     final token = await AuthService.getToken();
+
+    print('===== CREATE ORDER REQUEST =====');
+    print('URL: $baseUrl/orders');
+    print('Payment Method: ${body['paymentMethod']}');
 
     final response = await http.post(
       Uri.parse('$baseUrl/orders'),
@@ -20,8 +24,22 @@ class OrderService {
       body: jsonEncode(body),
     );
 
+    print('Status Code: ${response.statusCode}');
+    print('===== RESPONSE BODY =====');
+    print(response.body);
+    print('==========================');
+
     if (response.statusCode == 201) {
-      return Order.fromJson(jsonDecode(response.body));
+      final jsonData = jsonDecode(response.body);
+      
+      print('✅ Order created successfully');
+      print('Order ID: ${jsonData['order']['id']}');
+      
+      if (jsonData['paymentUrl'] != null) {
+        print('✅ MoMo Payment URL: ${jsonData['paymentUrl']}');
+      }
+      
+      return jsonData; // { order, shipment, paymentUrl }
     } else {
       throw Exception(
           'Failed to create order: ${response.statusCode} ${response.body}');
@@ -29,8 +47,11 @@ class OrderService {
   }
 
   /// Mua ngay
-  static Future<Order> createOrderBuyNow(Map<String, dynamic> body) async {
+  static Future<Map<String, dynamic>> createOrderBuyNow(Map<String, dynamic> body) async {
     final token = await AuthService.getToken();
+
+    print('===== CREATE ORDER BUY NOW REQUEST =====');
+    print('URL: $baseUrl/orders');
 
     final response = await http.post(
       Uri.parse('$baseUrl/orders'),
@@ -41,8 +62,19 @@ class OrderService {
       body: jsonEncode(body),
     );
 
+    print('Status Code: ${response.statusCode}');
+
     if (response.statusCode == 201) {
-      return Order.fromJson(jsonDecode(response.body));
+      final jsonData = jsonDecode(response.body);
+      
+      print('✅ BuyNow Order created');
+      print('Order ID: ${jsonData['order']['id']}');
+      
+      if (jsonData['paymentUrl'] != null) {
+        print('✅ MoMo Payment URL: ${jsonData['paymentUrl']}');
+      }
+      
+      return jsonData;
     } else {
       throw Exception(
           'Failed to create BuyNow order: ${response.statusCode} ${response.body}');

@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marketky/constants/app_color.dart';
-import 'package:marketky/core/models/order_model.dart';
 import 'package:marketky/views/screens/my_order_page.dart';
 
 class OrderSuccessPage extends StatelessWidget {
-  final Order order;
+  // Receive raw order map returned from API
+  final Map<String, dynamic> order;
 
   const OrderSuccessPage({Key? key, required this.order}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Tự động điều hướng đến MyOrdersPage sau 3 giây
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => MyOrdersPage(orderId: order.orderNumber),
-        ),
-      );
-    });
-
+    final String orderNumber =
+        (order['order_number'] ?? order['orderNumber'] ?? '').toString();
     return Scaffold(
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
@@ -33,23 +26,25 @@ class OrderSuccessPage extends StatelessWidget {
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
                 onPressed: () {
-                  // Điều hướng đến MyOrdersPage ngay lập tức
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => MyOrdersPage(orderId: order.orderNumber),
+                      builder: (context) =>
+                          MyOrdersPage(orderId: orderNumber),
                     ),
                   );
                 },
-                child: const Text(
+                child: Text(
                   'Xem đơn hàng của bạn',
-                  style: TextStyle(color: AppColor.secondary, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: AppColor.secondary, fontWeight: FontWeight.w500),
                 ),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: AppColor.primary,
                   backgroundColor: AppColor.border,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -61,13 +56,17 @@ class OrderSuccessPage extends StatelessWidget {
                 },
                 child: const Text(
                   'Tiếp tục mua sắm',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.primary,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -96,7 +95,7 @@ class OrderSuccessPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Chúng tôi đã nhận được đơn hàng của bạn\nMã đơn hàng: ${order.orderNumber}',
+              'Chúng tôi đã nhận được đơn hàng của bạn\nMã đơn hàng: $orderNumber',
               style: TextStyle(
                 color: AppColor.secondary.withOpacity(0.8),
               ),

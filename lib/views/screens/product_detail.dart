@@ -172,10 +172,6 @@ class _ProductDetailState extends State<ProductDetail> {
     }
   }
 
-  Color _lighterPrimary(double amount) {
-    return Color.alphaBlend(Colors.white.withOpacity(amount), AppColor.primary);
-  }
-
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
